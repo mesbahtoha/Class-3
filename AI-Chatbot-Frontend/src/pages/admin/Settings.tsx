@@ -187,7 +187,7 @@ export function AdminSettings() {
           <div className="text-xs text-muted">
             {apiKey?.configured
               ? `Configured (${apiKey.masked ?? 'masked'}) · source: ${apiKey.source}`
-              : 'Not configured — AI responses will fail. Set it in the backend .env or use the AI settings above.'}
+              : 'Not configured. AI responses will fail. Set it in the backend .env or use the AI settings above.'}
           </div>
         </div>
         <Badge variant={apiKey?.configured ? 'success' : 'danger'}>

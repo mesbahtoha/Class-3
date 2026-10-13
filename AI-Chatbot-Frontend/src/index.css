@@ -1301,7 +1301,7 @@ html[data-theme='dark'] .blob {
     width: 100%;
     margin-top: 2px;
     padding-top: 8px;
-    border-top: 1px dashed var(--border-color);
+    border-top: 2px solid var(--border-color);
   }
 }
 
@@ -2070,5 +2070,365 @@ body.drawer-open {
   }
   .composer-attachment-name {
     max-width: 120px;
+  }
+}
+
+/* ============================================================
+   Playful Geometric Design System (global, single source of truth)
+   Used by every kid facing page: landing, tutor, books, practice,
+   welcome, learn. MatchRequestsPage keeps only game board styles.
+   Tokens: cream paper, slate ink, violet accent, pink, yellow, mint.
+   No em dashes or en dashes in UI copy. Use commas and periods.
+   ============================================================ */
+:root {
+  --pg-bg: #FFFDF5;
+  --pg-fg: #1E293B;
+  --pg-muted: #F1F5F9;
+  --pg-muted-fg: #64748B;
+  --pg-accent: #8B5CF6;
+  --pg-accent-dark: #7C3AED;
+  --pg-pink: #F472B6;
+  --pg-yellow: #FBBF24;
+  --pg-mint: #34D399;
+  --pg-border-soft: #E2E8F0;
+  --pg-radius-sm: 8px;
+  --pg-radius-md: 16px;
+  --pg-radius-lg: 24px;
+  --pg-radius-full: 9999px;
+  --pg-shadow: 4px 4px 0 0 #1E293B;
+  --pg-shadow-lg: 8px 8px 0 0 #E2E8F0;
+  --pg-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pg-font-head: 'Outfit', system-ui, sans-serif;
+  --pg-font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.pg-app {
+  position: relative;
+  min-height: 100vh;
+  background: var(--pg-bg);
+  background-image: radial-gradient(rgba(30, 41, 59, 0.06) 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+  color: var(--pg-fg);
+  font-family: var(--pg-font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.pg-app h1,
+.pg-app h2,
+.pg-app h3 {
+  font-family: var(--pg-font-head);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--pg-fg);
+}
+
+.pg-app button {
+  font-family: inherit;
+}
+
+.pg-app :focus-visible {
+  outline: 3px solid var(--pg-accent);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.pg-container {
+  width: 100%;
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Sticker card */
+.pg-card {
+  background: #FFFFFF;
+  border: 2px solid var(--pg-fg);
+  border-radius: var(--pg-radius-md);
+  box-shadow: 8px 8px 0 0 var(--pg-border-soft);
+  transition: transform 0.3s var(--pg-bounce), box-shadow 0.3s var(--pg-bounce);
+}
+
+.pg-card-yellow-shadow {
+  box-shadow: 8px 8px 0 0 var(--pg-yellow);
+}
+
+.pg-card-mint-shadow {
+  box-shadow: 8px 8px 0 0 var(--pg-mint);
+}
+
+.pg-card-pink-shadow {
+  box-shadow: 8px 8px 0 0 var(--pg-pink);
+}
+
+/* Candy primary button */
+.pg-btn-candy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 26px;
+  border-radius: var(--pg-radius-full);
+  background: var(--pg-accent);
+  color: #FFFFFF;
+  border: 2px solid var(--pg-fg);
+  box-shadow: var(--pg-shadow);
+  font-family: var(--pg-font-head);
+  font-weight: 700;
+  font-size: 15.5px;
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.25s var(--pg-bounce), box-shadow 0.25s var(--pg-bounce), background 0.2s ease;
+}
+
+.pg-btn-candy:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--pg-fg);
+  background: var(--pg-accent-dark);
+}
+
+.pg-btn-candy:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 var(--pg-fg);
+}
+
+.pg-btn-candy:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary button */
+.pg-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 12px 24px;
+  border-radius: var(--pg-radius-full);
+  background: #FFFFFF;
+  color: var(--pg-fg);
+  border: 2px solid var(--pg-fg);
+  font-weight: 700;
+  font-size: 14.5px;
+  line-height: 1.2;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.25s var(--pg-bounce), background 0.2s ease, box-shadow 0.25s var(--pg-bounce);
+}
+
+.pg-btn-secondary:hover:not(:disabled) {
+  background: var(--pg-yellow);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--pg-shadow);
+}
+
+.pg-btn-secondary:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 0 var(--pg-fg);
+}
+
+.pg-btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Input */
+.pg-input {
+  width: 100%;
+  padding: 12px 16px;
+  min-height: 52px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--pg-fg);
+  background: #FFFFFF;
+  border: 2px solid #CBD5E1;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pg-input::placeholder {
+  color: #94A3B8;
+}
+
+.pg-input:focus {
+  border-color: var(--pg-accent);
+  box-shadow: 4px 4px 0 0 var(--pg-accent);
+}
+
+textarea.pg-input {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+select.pg-input {
+  width: auto;
+  min-height: 48px;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+/* Badges */
+.pg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 15px;
+  border-radius: var(--pg-radius-full);
+  border: 2px solid var(--pg-fg);
+  background: #FFFFFF;
+  box-shadow: 3px 3px 0 0 var(--pg-fg);
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: var(--pg-fg);
+  white-space: nowrap;
+}
+
+.pg-badge-yellow {
+  background: var(--pg-yellow);
+}
+
+.pg-badge-mint {
+  background: var(--pg-mint);
+  color: #FFFFFF;
+}
+
+.pg-badge-pink {
+  background: var(--pg-pink);
+  color: #FFFFFF;
+}
+
+/* Icon in colored circle, never floating alone */
+.pg-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  border: 2px solid var(--pg-fg);
+  box-shadow: 3px 3px 0 0 var(--pg-fg);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Small result bubbles used on landing and tutor */
+.pg-result-bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--pg-muted);
+  border: 2px solid var(--pg-fg);
+  border-radius: 16px 16px 16px 4px;
+  padding: 12px 14px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.pg-result-bubble.correct {
+  background: #F0FDF4;
+  border-color: var(--pg-mint);
+}
+
+.pg-result-icon {
+  flex-shrink: 0;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: var(--pg-radius-full);
+  background: var(--pg-fg);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12.5px;
+  border: 2px solid var(--pg-fg);
+}
+
+.pg-result-bubble.correct .pg-result-icon {
+  background: var(--pg-mint);
+}
+
+/* Dot grid decoration */
+.pg-dot-grid {
+  background-image: radial-gradient(rgba(30, 41, 59, 0.14) 2px, transparent 2px);
+  background-size: 20px 20px;
+  border-radius: var(--pg-radius-md);
+}
+
+/* Pop entrance */
+.pg-pop-in {
+  animation: pg-pop-in 0.55s var(--pg-bounce) both;
+}
+
+@keyframes pg-pop-in {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .pg-container {
+    padding: 0 16px;
+  }
+  .pg-card,
+  .pg-card-yellow-shadow,
+  .pg-card-mint-shadow,
+  .pg-card-pink-shadow {
+    box-shadow: 4px 4px 0 0 var(--pg-border-soft);
+  }
+  .pg-card-yellow-shadow {
+    box-shadow: 4px 4px 0 0 var(--pg-yellow);
+  }
+  .pg-card-mint-shadow {
+    box-shadow: 4px 4px 0 0 var(--pg-mint);
+  }
+  .pg-card-pink-shadow {
+    box-shadow: 4px 4px 0 0 var(--pg-pink);
+  }
+}
+
+@media (max-width: 600px) {
+  .pg-app {
+    font-size: 15px;
+  }
+  .pg-btn-candy,
+  .pg-btn-secondary {
+    min-height: 48px;
+    width: 100%;
+  }
+  .pg-input {
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-app *,
+  .pg-app *::before,
+  .pg-app *::after,
+  .pg-pop-in {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

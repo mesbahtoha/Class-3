@@ -1,4 +1,4 @@
-import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel } from '../database/models';
+import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel, BookModel, BookChunkModel, IngestionJobModel } from '../database/models';
 
 /**
  * Central index creation. Idempotent - safe to run on every boot.
@@ -45,6 +45,15 @@ export async function ensureIndexes(): Promise<void> {
   // Legacy chat logs
   tasks.push(
     ChatLogModel.collection.createIndex({ userId: 1, createdAt: -1 })
+  );
+
+  // Class 3 textbooks (published-only retrieval)
+  tasks.push(
+    BookModel.collection.createIndex({ publicationState: 1, subject: 1 }),
+    BookModel.collection.createIndex({ title: 'text', subject: 'text' }),
+    BookChunkModel.collection.createIndex({ bookId: 1, chunkIndex: 1 }),
+    BookChunkModel.collection.createIndex({ bookTitle: 'text', text: 'text', chapterTitle: 'text' }),
+    IngestionJobModel.collection.createIndex({ bookId: 1, createdAt: -1 })
   );
 
   await Promise.allSettled(tasks);

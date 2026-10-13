@@ -34,6 +34,12 @@ function fileInfo(mimeType?: string | null): { label: string; icon: ReactElement
 export function Citations({ citations, sources }: { citations?: Citation[]; sources?: Source[] }) {
   const refs = new Map<string, FileRef>();
 
+  // Textbook citations carry real book/chapter/page metadata (often without a
+  // public file URL ,  book files stay private unless distribution is allowed).
+  const bookRefs = (citations ?? []).filter(
+    (c) => (c.kind === 'book' || c.bookTitle) && !c.fileUrl
+  );
+
   for (const citation of citations ?? []) {
     if (!citation.fileUrl) continue;
     refs.set(citation.fileUrl, {
@@ -62,11 +68,22 @@ export function Citations({ citations, sources }: { citations?: Citation[]; sour
   }
 
   const unique = Array.from(refs.values());
-  if (!unique.length) return null;
+  if (!unique.length && !bookRefs.length) return null;
 
   return (
-    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border-color)' }}>
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '2px solid #E2E8F0' }}>
       <div className="text-xs font-semibold text-muted mb-2">Sources</div>
+      {bookRefs.length > 0 && (
+        <div className="flex flex-col" style={{ gap: 4, marginBottom: unique.length ? 8 : 0 }}>
+          {bookRefs.map((c, i) => (
+            <span key={`${c.chunkId ?? i}`} className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Book: {c.bookTitle || c.title}
+              {c.chapterTitle ? `, Chapter: ${c.chapterTitle}` : ''}
+              {c.pageStart ? `, Page ${c.pageStart}${c.pageEnd && c.pageEnd !== c.pageStart ? ` to ${c.pageEnd}` : ''}` : ''}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap" style={{ gap: 8 }}>
         {unique.map((ref) => {
           const file = fileInfo(ref.mimeType);

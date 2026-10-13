@@ -17,12 +17,25 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/PasswordPages').then(
 const ResetPasswordPage = lazy(() => import('@/pages/auth/PasswordPages').then((m) => ({ default: m.ResetPasswordPage })));
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage').then((m) => ({ default: m.ChatPage })));
 const ShareView = lazy(() => import('@/pages/chat/ShareView').then((m) => ({ default: m.ShareView })));
+const WelcomePage = lazy(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
+const TutorPage = lazy(() => import('@/pages/TutorPage').then((m) => ({ default: m.TutorPage })));
+const BooksPage = lazy(() => import('@/pages/BooksPage').then((m) => ({ default: m.BooksPage })));
+const BookDetailPage = lazy(() => import('@/pages/BookDetailPage').then((m) => ({ default: m.BookDetailPage })));
+const LearnPage = lazy(() => import('@/pages/LearnPage').then((m) => ({ default: m.LearnPage })));
+const PracticePage = lazy(() => import('@/pages/PracticePage').then((m) => ({ default: m.PracticePage })));
+const MatchRequestsPage = lazy(() => import('@/pages/exercises/MatchRequestsPage').then((m) => ({ default: m.MatchRequestsPage })));
+const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('@/pages/ContactPage').then((m) => ({ default: m.ContactPage })));
+const HelpPage = lazy(() => import('@/pages/HelpPage').then((m) => ({ default: m.HelpPage })));
+const PrivacyPage = lazy(() => import('@/pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard').then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = lazy(() => import('@/pages/admin/Users').then((m) => ({ default: m.AdminUsers })));
 const AdminNotices = lazy(() => import('@/pages/admin/Notices').then((m) => ({ default: m.AdminNotices })));
 const AdminChats = lazy(() => import('@/pages/admin/Chats').then((m) => ({ default: m.AdminChats })));
 const AdminAnalytics = lazy(() => import('@/pages/admin/Analytics').then((m) => ({ default: m.AdminAnalytics })));
 const AdminTokens = lazy(() => import('@/pages/admin/Tokens').then((m) => ({ default: m.AdminTokens })));
+const AdminBooks = lazy(() => import('@/pages/admin/Books').then((m) => ({ default: m.AdminBooks })));
+const AdminAISettings = lazy(() => import('@/pages/admin/AISettings').then((m) => ({ default: m.AdminAISettings })));
 const AdminSettings = lazy(() => import('@/pages/admin/Settings').then((m) => ({ default: m.AdminSettings })));
 const AdminPromptTemplates = lazy(() => import('@/pages/admin/PromptTemplates').then((m) => ({ default: m.AdminPromptTemplates })));
 const AdminLogs = lazy(() => import('@/pages/admin/Logs').then((m) => ({ default: m.AdminLogs })));
@@ -57,6 +70,18 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/tutor" element={<TutorPage />} />
+          <Route path="/books" element={<BooksPage />} />
+          <Route path="/books/:bookId" element={<BookDetailPage />} />
+          <Route path="/learn/:lessonId" element={<LearnPage />} />
+          <Route path="/learn" element={<LearnPage />} />
+          <Route path="/practice" element={<PracticePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/exercise/match-requests" element={<MatchRequestsPage />} />
           <Route element={<PublicOnlyRoute />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
@@ -77,6 +102,8 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/books" element={<AdminBooks />} />
+            <Route path="/admin/ai-settings" element={<AdminAISettings />} />
             <Route path="/admin/notices" element={<AdminNotices />} />
             <Route path="/admin/chats" element={<AdminChats />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />

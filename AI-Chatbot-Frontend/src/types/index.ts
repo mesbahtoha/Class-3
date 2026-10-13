@@ -75,6 +75,14 @@ export interface Citation {
   fileUrl?: string | null;
   fullNoticeUrl?: string | null;
   mimeType?: string | null;
+  // --- Class 3 textbook citations (real book metadata, never invented) ---
+  kind?: 'book' | 'notice';
+  bookId?: string | null;
+  bookTitle?: string | null;
+  chapterTitle?: string | null;
+  pageStart?: number | null;
+  pageEnd?: number | null;
+  chunkId?: string | null;
 }
 
 export interface Source {
@@ -152,6 +160,106 @@ export type StreamEvent =
   | { type: 'done'; messageId: string; status: string; finishReason: string; model: string }
   | { type: 'error'; message: string }
   | { type: 'citations'; citations: Citation[]; sources: Source[] };
+
+// ---- Class 3 AI Tutor ----
+
+export type TutorAnswerStatus = 'ANSWERED' | 'INSUFFICIENT_BOOK_CONTEXT' | 'CLARIFICATION_NEEDED';
+
+export interface TutorSource {
+  bookId: string;
+  bookTitle: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  pageStart?: number;
+  pageEnd?: number;
+  chunkId: string;
+}
+
+export interface TutorResponse {
+  answer: string;
+  answerLanguage: 'bn' | 'en' | 'banglish';
+  answerStatus: TutorAnswerStatus;
+  sources: TutorSource[];
+  lesson?: LessonPlan;
+  quiz?: QuizPreview;
+  followUpQuestion?: string;
+  requestId: string;
+  provider?: string;
+  model?: string;
+}
+
+export type SlideType = 'TITLE' | 'EXPLANATION' | 'IMAGE' | 'DIAGRAM' | 'EXAMPLE' | 'INTERACTIVE' | 'QUIZ' | 'SUMMARY';
+
+export interface TutorSlide {
+  type: SlideType;
+  title: string;
+  body: string;
+  imageUrl?: string;
+  diagramKind?: 'fraction-bar' | 'number-line' | 'shapes' | 'tally' | 'none';
+  quizOptions?: string[];
+  quizAnswerIndex?: number;
+}
+
+export interface LessonPlan {
+  lessonId: string;
+  title: string;
+  subject?: string;
+  slides: TutorSlide[];
+}
+
+export interface QuizPreview {
+  question: string;
+  options: string[];
+  answerIndex: number;
+}
+
+export interface BookInfo {
+  _id: string;
+  title: string;
+  subject: string;
+  grade: string;
+  curriculum: string;
+  language: string;
+  edition?: string;
+  publisher?: string;
+  chunkCount?: number;
+  pageCount?: number;
+  updatedAt?: string;
+}
+
+export interface AdminBook extends BookInfo {
+  sourceNotes?: string;
+  rightsStatus?: string;
+  fileSize?: number;
+  checksum?: string;
+  processingState: 'pending' | 'processing' | 'ready' | 'failed';
+  processingError?: string;
+  processingProgress?: number;
+  publicationState: 'draft' | 'published' | 'archived';
+  version?: number;
+  publishedAt?: string | null;
+  createdAt?: string;
+}
+
+export interface IngestionJob {
+  _id: string;
+  kind: string;
+  state: 'queued' | 'processing' | 'done' | 'failed';
+  progress: number;
+  errorCode?: string;
+  errorMessage?: string;
+  warnings?: string[];
+  createdAt?: string;
+  finishedAt?: string | null;
+}
+
+export interface ProviderSummary {
+  id: string;
+  displayName: string;
+  implemented: boolean;
+  capabilities: { text: boolean; structuredOutput: boolean; vision: boolean; streaming: boolean } | null;
+  models: { modelId: string; label: string }[];
+}
 
 // ---- Admin ----
 export interface AdminUser {

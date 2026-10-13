@@ -92,7 +92,7 @@ export function AdminLogs() {
                       <td className="text-sm text-muted" style={{ maxWidth: 240 }}>
                         {logItem.meta && Object.keys(logItem.meta).length > 0
                           ? <span title={JSON.stringify(logItem.meta)}>{truncate(JSON.stringify(logItem.meta), 60)}</span>
-                          : '—'}
+                          : 'Not set'}
                       </td>
                       <td className="text-sm text-secondary">{formatDateTime(logItem.timestamp)}</td>
                     </tr>

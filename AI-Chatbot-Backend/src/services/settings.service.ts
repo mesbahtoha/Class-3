@@ -3,11 +3,14 @@ import { DEFAULT_SETTINGS } from '../constants';
 import { createTtlCache } from '../utils/cache';
 
 export interface AISettings {
+  provider: string;
   model: string;
   modelFast: string;
   modelAccurate: string;
   temperature: number;
   maxTokens: number;
+  timeoutMs: number;
+  fallbacks: Array<{ providerId: string; model: string }>;
   systemPrompt: string;
   dailyQuotaPerUser: number;
   monthlyQuotaPerUser: number;
@@ -62,23 +65,36 @@ export const settingsService = {
 
   async getAISettings(): Promise<AISettings> {
     const values = await this.loadValues([
+      'ai.provider',
       'ai.model',
       'ai.modelFast',
       'ai.modelAccurate',
       'ai.temperature',
       'ai.maxTokens',
+      'ai.timeoutMs',
+      'ai.fallbacks',
       'ai.systemPrompt',
       'ai.dailyQuotaPerUser',
       'ai.monthlyQuotaPerUser',
       'ai.openRouterApiKey',
     ]);
 
+    let fallbacks: Array<{ providerId: string; model: string }> = [];
+    try {
+      const raw = values['ai.fallbacks'];
+      if (Array.isArray(raw)) fallbacks = raw as Array<{ providerId: string; model: string }>;
+      else if (typeof raw === 'string' && raw) fallbacks = JSON.parse(raw);
+    } catch { fallbacks = []; }
+
     return {
+      provider: String(values['ai.provider'] || DEFAULT_SETTINGS['ai.provider']),
       model: String(values['ai.model'] || DEFAULT_SETTINGS['ai.model']),
       modelFast: String(values['ai.modelFast'] || DEFAULT_SETTINGS['ai.modelFast']),
       modelAccurate: String(values['ai.modelAccurate'] || DEFAULT_SETTINGS['ai.modelAccurate']),
-      temperature: Number(values['ai.temperature'] ?? 0.15),
+      temperature: Number(values['ai.temperature'] ?? 0.3),
       maxTokens: Number(values['ai.maxTokens'] ?? 700),
+      timeoutMs: Number(values['ai.timeoutMs'] ?? 45000),
+      fallbacks,
       systemPrompt: String(values['ai.systemPrompt'] ?? ''),
       dailyQuotaPerUser: Number(values['ai.dailyQuotaPerUser'] ?? 40000),
       monthlyQuotaPerUser: Number(values['ai.monthlyQuotaPerUser'] ?? 0),

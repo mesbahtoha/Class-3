@@ -28,6 +28,14 @@ const env = {
     maxTokens: Number(process.env.OPENROUTER_MAX_TOKENS || 700),
   },
 
+  tutor: {
+    provider: process.env.AI_PROVIDER || 'openrouter',
+    model: process.env.AI_MODEL || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite',
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS || 45000),
+    guestPerMin: Number(process.env.GUEST_CHAT_PER_MIN || 10),
+    uploadMaxMb: Number(process.env.BOOK_UPLOAD_MAX_MB || 30),
+  },
+
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'dev-access-secret',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',

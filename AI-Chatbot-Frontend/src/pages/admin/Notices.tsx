@@ -99,7 +99,7 @@ export function AdminNotices() {
   const reindex = async (notice: NoticeRow) => {
     try {
       const payload = await apiPost<{ chunkCount: number }>(`/api/v1/admin/notices/${notice._id}/reindex`);
-      toast.success(`Reindexed — ${payload.chunkCount} chunks created`);
+      toast.success(`Reindexed. ${payload.chunkCount} chunks created`);
       void load();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -144,7 +144,7 @@ export function AdminNotices() {
           <EmptyState
             icon={<FaFileAlt />}
             title="No notices yet"
-            description="Upload PDFs, images or paste notice text — the assistant will answer from them."
+            description="Upload PDFs, images or paste notice text. The assistant will answer from them."
             action={<Button onClick={() => setCreateOpen(true)}><FaPlus /> Add your first notice</Button>}
           />
         ) : (

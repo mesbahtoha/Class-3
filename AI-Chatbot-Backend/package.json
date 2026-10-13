@@ -9,6 +9,7 @@
     "start": "npm run build && node dist/server.js",
     "start:dev": "tsx src/server.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.api.json",
+    "test:tutor": "tsx tests/run.ts",
     "vercel-build": "npm run build"
   },
   "keywords": [

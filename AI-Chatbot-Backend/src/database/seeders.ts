@@ -48,18 +48,17 @@ async function seedAdmin(): Promise<void> {
 }
 
 async function seedSettings(): Promise<void> {
-  const existingCount = await SettingModel.countDocuments();
-  if (existingCount > 0) return;
-
-  const docs = Object.entries(DEFAULT_SETTINGS).map(([key, value]) => ({
-    key,
-    value,
-    group: key.split('.')[0],
-    description: '',
-  }));
-
-  await SettingModel.insertMany(docs);
-  log.info('Default settings seeded');
+  // Insert-only for missing keys so existing deployments gain new tutor keys
+  // without overwriting admin-customized values.
+  const existing = await SettingModel.find().select('key').lean();
+  const have = new Set(existing.map((d) => d.key));
+  const missing = Object.entries(DEFAULT_SETTINGS)
+    .filter(([key]) => !have.has(key))
+    .map(([key, value]) => ({ key, value, group: key.split('.')[0], description: '' }));
+  if (missing.length) {
+    await SettingModel.insertMany(missing);
+    log.info('Missing settings seeded', { count: missing.length });
+  }
 }
 
 async function seedPromptTemplates(): Promise<void> {

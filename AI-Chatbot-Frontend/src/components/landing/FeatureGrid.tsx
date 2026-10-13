@@ -5,53 +5,61 @@ interface Feature {
   icon: IconType;
   title: string;
   description: string;
+  color: string;
 }
 
 const FEATURES: Feature[] = [
   {
     icon: FaSearch,
-    title: 'Instant answers',
-    description: 'Search your uploaded notices and get grounded answers with sources, in seconds.',
+    title: 'Understands Unit Lesson Page',
+    description: 'Write Unit 3 Lesson 5 Page 45 and get the exact match solved, even with very short text.',
+    color: '#8B5CF6',
   },
   {
     icon: FaBolt,
-    title: 'Streaming responses',
-    description: 'Watch answers appear token-by-token, just like ChatGPT — no waiting for full loads.',
+    title: 'Simple words for Class 3',
+    description: 'Short sentences, Bangla meaning, and one small practice question at the end.',
+    color: '#F472B6',
   },
   {
     icon: FaComments,
-    title: 'Conversation history',
-    description: 'Chats are saved, searchable, shareable and exportable. Pick up where you left off.',
+    title: 'Matching game included',
+    description: 'Tap a request, tap a reply, earn stars. Built for the Page 45 request matching task.',
+    color: '#FBBF24',
   },
   {
     icon: FaShieldAlt,
-    title: 'Secure accounts',
-    description: 'JWT-based authentication with refresh rotation, quota controls and role-based access.',
+    title: 'Safe and book based',
+    description: 'Answers stay close to English For Today and never shame a wrong try.',
+    color: '#34D399',
   },
 ];
 
 export function FeatureGrid() {
   return (
-    <section className="container" aria-labelledby="landing-features-title" style={{ padding: '104px 24px 32px' }}>
-      <h2 id="landing-features-title" className="section-title">
-        Built for campus, powered by AI
-      </h2>
-      <p className="section-subtitle">
-        Everything you need to find what matters in your university notices — in one place.
-      </p>
-      <div className="feature-grid">
-        {FEATURES.map((feature) => (
-          <article key={feature.title} className="card card-pad hover-lift">
-            <div className="feature-icon">
-              <feature.icon />
-            </div>
-            <h3 style={{ fontSize: 16, marginBottom: 6 }}>{feature.title}</h3>
-            <p className="text-sm text-secondary" style={{ margin: 0 }}>
-              {feature.description}
-            </p>
-          </article>
-        ))}
+    <section className="pg-app" aria-labelledby="landing-features-title" style={{ padding: '48px 0 32px' }}>
+      <div className="pg-container">
+        <h2 id="landing-features-title" style={{ fontSize: 32, marginBottom: 8, textAlign: 'center' }}>
+          Made for little learners
+        </h2>
+        <p style={{ textAlign: 'center', color: '#64748B', marginBottom: 28 }}>
+          Everything a Class 3 child needs to finish English homework with a smile.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
+          {FEATURES.map((feature) => (
+            <article key={feature.title} className="pg-card pg-pop-in" style={{ padding: 22 }}>
+              <div className="pg-icon-circle" style={{ background: feature.color, marginBottom: 14 }}>
+                <feature.icon />
+              </div>
+              <h3 style={{ fontSize: 17, marginBottom: 6 }}>{feature.title}</h3>
+              <p style={{ margin: 0, color: '#475569', fontSize: 14.5 }}>
+                {feature.description}
+              </p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
+

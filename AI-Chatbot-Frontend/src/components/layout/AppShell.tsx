@@ -13,8 +13,7 @@ import { useChatStore } from '@/store/chat.store';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { formatTokens } from '@/lib/format';
-import { getStoredTheme, toggleTheme } from '@/lib/theme';
-import { MdDarkMode, MdLightMode } from 'react-icons/md';
+import { ThemeLangControls } from '@/components/ui/ThemeLangControls';
 
 export function AppShell() {
   const user = useAuthStore((s) => s.user);
@@ -27,7 +26,6 @@ export function AppShell() {
   const { quota } = useQuota();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState(getStoredTheme());
 
   // Lock body scroll + close on Escape while the mobile drawer is open.
   useEffect(() => {
@@ -166,12 +164,13 @@ export function AppShell() {
         </div>
       )}
 
-      <div className="flex items-center gap-2" style={{ padding: 12, borderTop: '1px solid var(--border-color)' }}>
+      <div className="flex items-center gap-2" style={{ padding: 12, borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
         <Avatar name={user?.name} size="sm" />
         <div className="flex-1" style={{ minWidth: 0 }}>
           <div className="text-sm font-semibold ellipsis">{user?.name}</div>
           <div className="text-xs text-muted ellipsis">{user?.email}</div>
         </div>
+        <ThemeLangControls compact />
         {user?.role === 'admin' && (
           <button
             className="btn btn-ghost btn-icon"
@@ -181,9 +180,6 @@ export function AppShell() {
             <MdSettings size={17} />
           </button>
         )}
-        <button className="btn btn-ghost btn-icon" title="Toggle theme" onClick={() => setTheme(toggleTheme())}>
-          {theme === 'dark' ? <MdLightMode size={17} /> : <MdDarkMode size={17} />}
-        </button>
         <button className="btn btn-ghost btn-icon" title="Logout" onClick={() => void handleLogout()}>
           <MdLogout size={17} />
         </button>
@@ -232,16 +228,19 @@ export function AppShell() {
               <MdMenu size={20} />
             </button>
             <span className="font-semibold ellipsis" style={{ fontSize: 15 }}>
-              NoticeFlow
+              Shikhi Bondhu
             </span>
           </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            style={{ color: 'var(--text-muted)', flexShrink: 0 }}
-            onClick={() => void handleClearAll()}
-          >
-            <MdDelete size={15} /> Clear all
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeLangControls compact />
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+              onClick={() => void handleClearAll()}
+            >
+              <MdDelete size={15} /> Clear all
+            </button>
+          </div>
         </div>
         <div className="flex-1 route-fade" style={{ minHeight: 0, position: 'relative', overflow: 'hidden', background: 'var(--bg-chat)' }}>
           <Outlet />

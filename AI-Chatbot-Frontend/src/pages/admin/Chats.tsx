@@ -102,21 +102,21 @@ export function AdminChats() {
                       </td>
                       <td style={{ maxWidth: 380 }}>
                         <div className="ellipsis" title={row.content}>
-                          {truncate(row.content || '—', 110)}
+                          {truncate(row.content || 'Not set', 110)}
                         </div>
                       </td>
                       <td className="text-sm text-secondary" style={{ maxWidth: 180 }}>
-                        <div className="ellipsis">{row.conversationTitle || '—'}</div>
+                        <div className="ellipsis">{row.conversationTitle || 'Not set'}</div>
                       </td>
-                      <td className="text-sm text-secondary">{row.model || '—'}</td>
-                      <td className="text-sm text-secondary">{row.totalTokens ?? '—'}</td>
+                      <td className="text-sm text-secondary">{row.model || 'Not set'}</td>
+                      <td className="text-sm text-secondary">{row.totalTokens ?? 'Not set'}</td>
                       <td>
                         {row.feedback ? (
                           <Badge variant={row.feedback.type === 'like' ? 'success' : 'danger'}>
                             {row.feedback.type === 'like' ? '👍 Like' : '👎 Dislike'}
                           </Badge>
                         ) : (
-                          <span className="text-xs text-muted">—</span>
+                          <span className="text-xs text-muted">Not set</span>
                         )}
                       </td>
                       <td className="text-sm text-secondary">{formatDateTime(row.createdAt)}</td>

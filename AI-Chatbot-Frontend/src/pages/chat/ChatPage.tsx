@@ -23,15 +23,17 @@ function EmptyChatHero() {
       >
         <FaRobot />
       </div>
-      {/* <div className="font-bold" style={{ fontSize: 15, marginBottom: 8, color: 'var(--color-primary)' }}>
-         NoticeFlow AI
-      </div> */}
       <h1 className="text-2xl font-bold" style={{ marginBottom: 8 }}>
-        What can I help you with?
+        👋 শিখি বন্ধু, আজ কী শিখবে?
       </h1>
-      <p className="text-muted" style={{ maxWidth: 480, marginBottom: 0 }}>
-        Ask anything about your university, or explore any topic with AI.
+      <p className="text-muted" style={{ maxWidth: 480, marginBottom: 12 }}>
+        বইভিত্তিক সহজ ব্যাখ্যা। বাংলায় লেখো বা Banglish এ, উত্তর পাবে বাংলা হরফে।
       </p>
+      <div className="flex flex-wrap justify-center" style={{ gap: 8, maxWidth: 520 }}>
+        {['ভগ্নাংশ কী? সহজ করে বোঝাও', 'vognangsho ki?', 'গাছের খাবার তৈরি হয় কিভাবে?'].map((ex) => (
+          <span key={ex} className="badge" style={{ fontSize: 12.5 }}>{ex}</span>
+        ))}
+      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import type { LanguageFn } from 'highlight.js';
 import { MdCheck, MdContentCopy } from 'react-icons/md';
 import 'highlight.js/styles/github-dark.css';
 
-// Register only the languages the assistant is likely to output —
+// Register only the languages the assistant is likely to output , 
 // keeps the (lazy-loaded) chat bundle far smaller than the full hljs build.
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';

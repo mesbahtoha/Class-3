@@ -19,7 +19,7 @@ export function SourceCard({ fileName, uploaded }: SourceCardProps) {
         </div>
       </div>
       <span className="source-open" aria-hidden="true">
-        Open Document →
+        Open Document
       </span>
     </div>
   );

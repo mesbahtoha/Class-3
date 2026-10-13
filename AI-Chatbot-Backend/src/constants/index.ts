@@ -55,18 +55,26 @@ export const DEFAULT_PROMPT_TEMPLATES = [
 ] as const;
 
 export const DEFAULT_SETTINGS = {
-  'app.title': 'AI Chatbot',
+  'app.title': 'Shikhi Bondhu, Class 3 Tutor',
   'app.tagline': 'Ask anything. Get instant answers.',
   'app.allowRegistration': true,
+  'ai.provider': 'openrouter',
   'ai.model': 'google/gemini-2.5-flash-lite',
   'ai.modelFast': 'google/gemini-2.5-flash-lite',
   'ai.modelAccurate': 'google/gemini-2.5-pro',
-  'ai.temperature': 0.15,
+  'ai.temperature': 0.3,
   'ai.maxTokens': 700,
+  'ai.timeoutMs': 45000,
+  'ai.fallbacks': [],
   'ai.systemPrompt': '',
   'ai.dailyQuotaPerUser': 40000,
   'ai.monthlyQuotaPerUser': 0,
   'ai.openRouterApiKey': '',
+  'ai.anthropicApiKey': '',
+  'ai.geminiApiKey': '',
+  'ai.compatibleBaseUrl': '',
+  'ai.compatibleApiKey': '',
+  'ai.compatibleModel': '',
   'ui.showTokenUsage': true,
   'ui.showSuggestedPrompts': true,
 } as const;

@@ -25,6 +25,3 @@ npm-debug.log*
 # Uploads / generated data
 uploads/
 coverage/
-
-.vercel
-.env*

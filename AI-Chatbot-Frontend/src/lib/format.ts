@@ -1,7 +1,7 @@
 export function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return '—';
+  if (!value) return 'Not set';
   const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return 'Not set';
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -10,9 +10,9 @@ export function formatDate(value: string | Date | null | undefined): string {
 }
 
 export function formatDateTime(value: string | Date | null | undefined): string {
-  if (!value) return '—';
+  if (!value) return 'Not set';
   const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return 'Not set';
   return date.toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -37,12 +37,12 @@ export function formatRelativeTime(value: string | Date | null | undefined): str
 }
 
 export function formatNumber(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return 'Not set';
   return new Intl.NumberFormat().format(value);
 }
 
 export function formatTokens(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return 'Not set';
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
   return String(value);

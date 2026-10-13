@@ -50,6 +50,41 @@ function detectType(mimeType: string): ChatAttachmentType | null {
   return null;
 }
 
+/**
+ * Magic-byte check: extension + MIME type are client-controlled, so verify
+ * the file signature matches the claimed type. Rejects spoofed uploads
+ * (e.g. an executable renamed to .jpg) before they reach the AI layer.
+ */
+function assertFileSignature(buffer: Buffer, mimeType: string): void {
+  const bad = (): Error & { statusCode?: number } => {
+    const error = new Error(
+      'This file looks damaged or is not a real image/PDF. Please try a clearer photo or a valid PDF.'
+    ) as Error & { statusCode?: number };
+    error.statusCode = 422;
+    return error;
+  };
+  if (buffer.length < 12) throw bad();
+  if (mimeType === 'application/pdf') {
+    if (buffer[0] !== 0x25 || buffer[1] !== 0x50 || buffer[2] !== 0x44 || buffer[3] !== 0x46) throw bad(); // %PDF
+    return;
+  }
+  if (mimeType === 'image/png') {
+    const png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    if (!png.every((b, i) => buffer[i] === b)) throw bad();
+    return;
+  }
+  if (mimeType === 'image/jpeg') {
+    if (buffer[0] !== 0xff || buffer[1] !== 0xd8 || buffer[2] !== 0xff) throw bad(); // SOI marker
+    return;
+  }
+  if (mimeType === 'image/webp') {
+    const riff = buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+    if (!riff) throw bad();
+    return;
+  }
+  throw bad();
+}
+
 function sweepExpired(): number {
   const now = Date.now();
   let removed = 0;
@@ -101,6 +136,9 @@ export function storeChatAttachment(input: {
     error.statusCode = 415;
     throw error;
   }
+
+  // Verify the bytes match the claimed type (extension/MIME can be spoofed).
+  assertFileSignature(input.buffer, input.mimeType);
 
   const id = crypto.randomBytes(24).toString('hex');
   const name = sanitizeFileName(input.originalName);

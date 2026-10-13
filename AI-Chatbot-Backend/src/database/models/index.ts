@@ -10,3 +10,6 @@ export { PromptTemplateModel, PromptTemplateDocument } from './PromptTemplate.mo
 export { NoticeModel, NoticeDocument } from './Notice.model';
 export { ChunkModel, ChunkDocument } from './Chunk.model';
 export { ChatLogModel, ChatLogDocument, FeedbackModel } from './ChatLog.model';
+export { BookModel, BookDocument } from './Book.model';
+export { BookChunkModel, BookChunkDocument } from './BookChunk.model';
+export { IngestionJobModel, IngestionJobDocument } from './IngestionJob.model';

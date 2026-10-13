@@ -4,14 +4,18 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { initTheme } from '@/lib/theme';
+import { LanguageProvider } from '@/lib/i18n';
 import './index.css';
+import './styles/polish.css';
 
 initTheme();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
       <Toaster
         position="top-right"
         toastOptions={{

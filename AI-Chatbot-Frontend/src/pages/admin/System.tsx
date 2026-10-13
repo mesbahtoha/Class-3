@@ -108,7 +108,7 @@ export function AdminSystem() {
           <Row label="Environment" value={data.env} />
           <Row label="Platform" value={data.platform} />
           <Row label="App base URL" value={<a href={data.appBaseUrl} target="_blank" rel="noreferrer">{data.appBaseUrl}</a>} />
-          <Row label="AI model" value={data.model || '—'} />
+          <Row label="AI model" value={data.model || 'Not set'} />
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export function AdminSystem() {
           </Badge>
         </div>
         <div style={{ padding: '6px 20px 16px' }}>
-          <Row label="Version" value={data.mongodb.version ?? '—'} />
+          <Row label="Version" value={data.mongodb.version ?? 'Not set'} />
           <Row label="Database size" value={`${data.mongodb.dbSizeMb} MB`} />
           <Row label="Collections" value={data.mongodb.collections} />
         </div>

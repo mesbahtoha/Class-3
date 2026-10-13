@@ -146,6 +146,24 @@ export function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong';
 }
 
+/**
+ * True when the backend does not implement the called route (stale deploy).
+ * Callers should show a persistent "backend outdated" notice instead of a
+ * bare toast so the admin knows to redeploy ,  not retry the same click.
+ */
+export function isRouteNotFoundError(error: unknown): boolean {
+  if (error instanceof ApiRequestError) {
+    return error.status === 404 && /route not found/i.test(error.message);
+  }
+  if (axios.isAxiosError(error)) {
+    return (
+      error.response?.status === 404 &&
+      /route not found/i.test(String(error.response?.data?.message ?? ''))
+    );
+  }
+  return false;
+}
+
 /** Reads an SSE stream from an authenticated POST request. */
 export async function streamPost(
   url: string,

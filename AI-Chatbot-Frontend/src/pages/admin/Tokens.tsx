@@ -94,7 +94,7 @@ export function AdminTokens() {
                     <td className="font-medium">{model.model}</td>
                     <td>{formatTokens(model.totalTokens)}</td>
                     <td>{model.requests}</td>
-                    <td>{model.requests ? formatTokens(Math.round(model.totalTokens / model.requests)) : '—'}</td>
+                    <td>{model.requests ? formatTokens(Math.round(model.totalTokens / model.requests)) : 'Not set'}</td>
                   </tr>
                 ))}
               </tbody>

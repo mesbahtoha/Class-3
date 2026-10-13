@@ -15,7 +15,9 @@ import {
   updateTemplateSchema,
   updateUserSchema,
 } from './admin.validation';
-import { uploadNoticeFile } from '../../../middleware/upload.middleware';
+import adminBooksController, { createBookSchema, updateBookSchema } from './admin-books.controller';
+import adminProvidersController, { updateProvidersSchema } from './admin-providers.controller';
+import { uploadNoticeFile, uploadBookFile } from '../../../middleware/upload.middleware';
 
 const router = Router();
 
@@ -58,5 +60,21 @@ router.delete('/prompt-templates/:id', adminController.deleteTemplate);
 // Logs + system
 router.get('/logs', validate(listLogsSchema, 'query'), adminController.listLogs);
 router.get('/system', adminController.systemInfo);
+
+// Class 3 textbooks (admin-managed, data-driven catalogue)
+router.get('/books', adminBooksController.list);
+router.get('/books/:id', adminBooksController.get);
+router.post('/books', uploadBookFile.single('file'), validate(createBookSchema), adminBooksController.create);
+router.patch('/books/:id', validate(updateBookSchema), adminBooksController.update);
+router.post('/books/:id/publish', adminBooksController.publish);
+router.post('/books/:id/unpublish', adminBooksController.unpublish);
+router.post('/books/:id/reindex', adminBooksController.reindex);
+router.post('/books/:id/archive', adminBooksController.archive);
+router.delete('/books/:id', adminBooksController.remove);
+
+// AI providers/models (runtime switching, masked secrets only)
+router.get('/providers', adminProvidersController.list);
+router.put('/providers', validate(updateProvidersSchema), adminProvidersController.update);
+router.post('/providers/:providerId/validate', adminProvidersController.validate);
 
 export default router;

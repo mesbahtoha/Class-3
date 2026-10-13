@@ -62,6 +62,16 @@ export const uploadNoticeFile = multer({
   fileFilter: noticeFileFilter,
 });
 
+/** Multipart upload for admin textbook PDFs (validated server-side by signature). */
+export const uploadBookFile = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Only PDF books are supported in this version'));
+  },
+});
+
 /** Multipart upload for avatars. */
 export const uploadAvatar = multer({
   storage: multer.memoryStorage(),

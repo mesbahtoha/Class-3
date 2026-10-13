@@ -83,7 +83,7 @@ export const conversationService = {
         lines.push('');
         lines.push(message.content || '*(empty)*');
         lines.push('');
-        lines.push('---');
+        lines.push('NEXT MESSAGE');
         lines.push('');
       }
 

@@ -94,6 +94,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     tokenStore.clear();
     localStorage.removeItem('nf_user');
+    // Clear user-specific cached data on logout/account switch (child safety).
+    try {
+      const { useChatStore } = await import('./chat.store');
+      const { useTutorStore } = await import('./tutor.store');
+      useChatStore.getState().reset();
+      useTutorStore.getState().resetTutor();
+    } catch {
+      // stores may be unavailable in some test contexts
+    }
     set({ user: null, usage: null, status: 'guest' });
   },
 

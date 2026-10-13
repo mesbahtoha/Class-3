@@ -2,8 +2,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   MdChat,
   MdDashboard,
-  MdDarkMode,
-  MdLightMode,
   MdLogout,
   MdMessage,
   MdPeople,
@@ -18,13 +16,15 @@ import {
 } from 'react-icons/md';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
-import { getStoredTheme, toggleTheme } from '@/lib/theme';
+import { ThemeLangControls } from '@/components/ui/ThemeLangControls';
 import { Avatar } from '@/components/ui/Avatar';
 
 const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: MdDashboard, end: true },
   { to: '/admin/users', label: 'Users', icon: MdPeople },
-  { to: '/admin/notices', label: 'Notices', icon: MdStickyNote2 },
+  { to: '/admin/books', label: 'Books (Class 3)', icon: MdStickyNote2 },
+  { to: '/admin/ai-settings', label: 'AI Providers', icon: MdMemory },
+  { to: '/admin/notices', label: 'Notices (legacy)', icon: MdStickyNote2 },
   { to: '/admin/chats', label: 'Chat History', icon: MdMessage },
   { to: '/admin/analytics', label: 'Analytics', icon: MdAnalytics },
   { to: '/admin/tokens', label: 'Token Usage', icon: MdToken },
@@ -39,7 +39,6 @@ export function AdminLayout() {
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState(getStoredTheme());
 
   // Lock body scroll + close on Escape while the mobile drawer is open.
   useEffect(() => {
@@ -111,15 +110,13 @@ export function AdminLayout() {
         </NavLink>
       </div>
 
-      <div className="flex items-center gap-2" style={{ padding: 12, borderTop: '1px solid var(--border-color)', flexShrink: 0 }}>
+      <div className="flex items-center gap-2" style={{ padding: 12, borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
         <Avatar name={user?.name} size="sm" />
         <div className="flex-1" style={{ minWidth: 0 }}>
           <div className="text-sm font-semibold ellipsis">{user?.name}</div>
           <div className="text-xs text-muted ellipsis">{user?.email}</div>
         </div>
-        <button className="btn btn-ghost btn-icon" title="Toggle theme" onClick={() => setTheme(toggleTheme())}>
-          {theme === 'dark' ? <MdLightMode size={17} /> : <MdDarkMode size={17} />}
-        </button>
+        <ThemeLangControls compact />
         <button className="btn btn-ghost btn-icon" title="Logout" onClick={() => void handleLogout()}>
           <MdLogout size={17} />
         </button>
@@ -165,8 +162,9 @@ export function AdminLayout() {
             <button className="btn btn-ghost btn-icon admin-sidebar-toggle" onClick={() => setOpen(true)} aria-label="Open menu">
               <MdMenu size={20} />
             </button>
-            <span className="font-semibold" style={{ fontSize: 15 }}>Admin</span>
+            <span className="font-semibold" style={{ fontSize: 15 }}>Shikhi Admin</span>
           </div>
+          <ThemeLangControls compact />
         </div>
         <div className="flex-1 overflow-y-auto admin-content route-fade">
           <Outlet />

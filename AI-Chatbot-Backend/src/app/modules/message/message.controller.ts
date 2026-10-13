@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { asyncHandler, fail } from '../../../utils/response.utils';
 import messageService from './message.service';
-import OpenRouterClient, { OpenRouterStreamChunk } from '../../../services/openrouter.client';
+import { streamWithFallback } from '../../../services/ai/provider-router';
 import quotaService from '../../../services/quota.service';
 import { deleteChatAttachments } from '../../../services/attachment.service';
 import { estimateCostUsd, estimateTokens } from '../../../utils/text.utils';
@@ -50,6 +50,8 @@ async function streamAiResponse(
   let completionTokens = 0;
   let totalTokens = 0;
   let model = '';
+  let actualProvider = '';
+  let actualModel = '';
   let finishReason = 'stop';
   let lastDbSave = Date.now();
 
@@ -92,7 +94,7 @@ async function streamAiResponse(
   try {
     await messageService.markStreaming(assistantId);
 
-    for await (const chunk of OpenRouterClient.stream(prepared.openRouterMessages, {
+    for await (const chunk of streamWithFallback(prepared.openRouterMessages as never, {
       signal: abortController.signal,
       model: prepared.model || undefined,
     })) {
@@ -105,11 +107,6 @@ async function streamAiResponse(
         continue;
       }
 
-      if (chunk.type === 'thinking' && chunk.content) {
-        writeEvent(res, { type: 'thinking', content: chunk.content });
-        continue;
-      }
-
       if (chunk.type === 'done') {
         finishReason = chunk.finishReason || 'stop';
         if (chunk.usage) {
@@ -117,6 +114,9 @@ async function streamAiResponse(
           completionTokens = chunk.usage.completionTokens || 0;
           totalTokens = chunk.usage.totalTokens || 0;
         }
+        if (chunk.provider) model = model || '';
+        actualProvider = chunk.provider || actualProvider;
+        actualModel = (chunk.model as string) || actualModel;
         break;
       }
 
@@ -132,10 +132,17 @@ async function streamAiResponse(
       totalTokens = promptTokens + completionTokens;
     }
 
-    model = prepared.model || model;
+    model = actualModel || prepared.model || model;
 
     const stopped = abortController.signal.aborted;
     const status = stopped ? 'stopped' : 'complete';
+
+    // Server-side log of the actual generating provider/model (never sent to children).
+    log.info('Chat stream complete', {
+      provider: actualProvider || 'unknown',
+      model,
+      conversationId,
+    });
 
     await messageService.finalizeMessage(assistantId, {
       content,
@@ -180,12 +187,18 @@ async function streamAiResponse(
     });
   } catch (error) {
     const err = error as Error;
+    // Full error stays server-side; children get a friendly message.
     log.error('Stream failed', { message: err.message });
 
     const stopped = abortController.signal.aborted;
+    const friendly = /rate|429|quota|limit/i.test(err.message)
+      ? 'Too many requests right now. Please wait a moment and try again.'
+      : /timed out|timeout/i.test(err.message)
+        ? 'The answer is taking too long. Please try again.'
+        : 'I had trouble answering. Please try again.';
 
     await messageService.finalizeMessage(assistantId, {
-      content,
+      content: content || friendly,
       status: stopped ? 'stopped' : 'error',
       model: model || undefined,
       errorMessage: stopped ? null : err.message,
@@ -194,7 +207,10 @@ async function streamAiResponse(
     });
 
     if (!stopped) {
-      writeEvent(res, { type: 'error', message: err.message });
+      if (!content) {
+        writeEvent(res, { type: 'token', content: friendly });
+      }
+      writeEvent(res, { type: 'error', message: friendly });
     }
     writeEvent(res, { type: 'done', messageId: String(assistantId), status: stopped ? 'stopped' : 'error' });
   } finally {
