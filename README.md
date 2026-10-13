@@ -50,14 +50,31 @@ npm run dev
 - Learner input is never rewritten; Banglish → Bengali-script answers.
 - Admins are quota-exempt; guests are rate-limited, never quota-tracked.
 
-## Deploy note
+## Deploy to Vercel (monorepo)
 
-The frontend only needs `VITE_API_BASE_URL`, but **every backend the app
-talks to must run the current code**. A stale deploy answers new routes
-(`/admin/books`, `/admin/providers`, `/tutor/*`) with
-`Route not found` — the admin UI detects this and shows a Bengali
-"backend outdated" notice with the connected server URL. After pulling,
-redeploy all backends (Vercel/Railway) before testing the admin panel.
+Create **two** Vercel projects from this same repo:
+
+**1. Backend** — Root Directory `AI-Chatbot-Backend`
+- Build Command: `npm run vercel-build` (Output: default)
+- Required env: `MONGO_URI` (MongoDB Atlas, not localhost), `DB_NAME`,
+  `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`,
+  `CORS_ORIGIN=https://<your-frontend>.vercel.app`,
+  `OPENROUTER_API_KEY` (or the key for your `AI_PROVIDER`),
+  `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- Health check: `GET https://<backend>.vercel.app/api/v1/health`
+  → `{ "success": true, "status": "ok" }`
+
+**2. Frontend** — Root Directory `AI-Chatbot-Frontend`
+- Framework: Vite, Build Command: `npm run build`, Output Directory: `dist`
+- Required env: `VITE_API_BASE_URL=https://<backend>.vercel.app`
+  (no trailing slash; the app trims it anyway)
+
+> Stale-backend note: **every backend the app talks to must run the
+> current code**. A stale deploy answers new routes
+> (`/admin/books`, `/admin/providers`, `/tutor/*`) with
+> `Route not found` — the admin UI detects this and shows a Bengali
+> "backend outdated" notice with the connected server URL. After pulling,
+> redeploy all backends (Vercel/Railway) before testing the admin panel.
 
 ## Tests & checks
 
