@@ -86,3 +86,9 @@ cd ../AI-Chatbot-Frontend
 npx tsc -b --noEmit
 npm run build
 ```
+
+## Deployment history
+
+Production is built from `main`. Old Vercel deployments stay listed in the
+dashboard as immutable snapshots; they do not affect what is served. Only the
+latest successful production build of `main` is live.
