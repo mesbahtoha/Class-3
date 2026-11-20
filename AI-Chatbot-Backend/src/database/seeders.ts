@@ -16,13 +16,25 @@ import { stableChapterId } from '../services/practice/chapters.service';
 const DEMO_BOOK_TITLE = 'Class 3 Demo Practice Book';
 const DEMO_BOOK_SUBJECT = 'English';
 const DEMO_SET_TITLE = 'Demo MCQ Practice Set';
-const DEMO_QUESTION_TEXT = 'What is the capital of Bangladesh?';
-const DEMO_OPTIONS = ['Dhaka', 'Chittagong', 'Khulna', 'Rajshahi'];
+
+/** Ten short Class 3 MCQs (one mark each, ten marks in total). */
+const DEMO_QUESTIONS: Array<{ question: string; options: string[]; correctIndex: number }> = [
+  { question: 'What is 2 + 3?', options: ['4', '5', '6', '7'], correctIndex: 1 },
+  { question: 'Which of these is a vowel?', options: ['k', 'm', 'i', 'c'], correctIndex: 2 },
+  { question: 'How many days are in a week?', options: ['5', '6', '7', '8'], correctIndex: 2 },
+  { question: 'What color is the sky on a clear day?', options: ['Green', 'Blue', 'Red', 'Yellow'], correctIndex: 1 },
+  { question: 'How many legs does a cat have?', options: ['2', '4', '6', '8'], correctIndex: 1 },
+  { question: 'What do bees make?', options: ['Sand', 'Honey', 'Snow', 'Hair'], correctIndex: 1 },
+  { question: 'Which is the smallest number?', options: ['10', '2', '20', '100'], correctIndex: 1 },
+  { question: 'How many hands does a typical human have?', options: ['1', '2', '3', '4'], correctIndex: 1 },
+  { question: 'What is the first month of the year?', options: ['February', 'March', 'January', 'December'], correctIndex: 2 },
+  { question: 'Which shape has four equal sides?', options: ['Circle', 'Triangle', 'Square', 'Rectangle'], correctIndex: 2 },
+];
 
 /**
  * Seeds an idempotent, fully published demo practice set so the system can be
  * shown without any admin setup: one published book with a chapter, one
- * published MCQ question set, and one demo MCQ question.
+ * published MCQ question set, and ten demo MCQ questions (10 marks total).
  */
 async function seedPracticeDemo(): Promise<void> {
   const demoChapterId = stableChapterId('Chapter 1', 1);
@@ -80,33 +92,41 @@ async function seedPracticeDemo(): Promise<void> {
     difficulty: 'easy',
     instructions: 'Answer the multiple choice question. Submit when you are done.',
     marksPerQuestion: 1,
-    totalQuestions: 1,
-    totalMarks: 1,
+    totalQuestions: DEMO_QUESTIONS.length,
+    totalMarks: DEMO_QUESTIONS.length,
     practiceModeEnabled: true,
     examModeEnabled: false,
     publicationState: 'published',
   }));
   const setId = setDoc?._id;
 
-  // 4. Demo MCQ question inside the set.
+  // 4. Demo MCQ questions inside the set (idempotent: match by question text).
   if (setId) {
-    const hasQuestion = await PracticeQuestionModel.countDocuments({ setId, questionType: 'mcq' });
-    if (hasQuestion === 0) {
+    for (const [index, demo] of DEMO_QUESTIONS.entries()) {
+      const existing = await PracticeQuestionModel.findOne({
+        setId,
+        questionType: 'mcq',
+        'payload.question': demo.question,
+      });
+      if (existing) continue;
       await PracticeQuestionModel.create({
         setId,
         bookId,
         chapterId: demoChapterId,
         chapterTitle: 'Chapter 1',
         questionType: 'mcq',
-        order: 1,
+        order: index + 1,
         marks: 1,
-        payload: { question: DEMO_QUESTION_TEXT, options: DEMO_OPTIONS },
-        answer: { correctIndex: 0 },
+        payload: { question: demo.question, options: demo.options },
+        answer: { correctIndex: demo.correctIndex },
         alternatives: [],
       });
-      log.info('Demo practice question seeded', { question: DEMO_QUESTION_TEXT });
     }
-    await PracticeQuestionSetModel.updateOne({ _id: setId }, { $set: { totalQuestions: 1, totalMarks: 1 } });
+    const questionCount = await PracticeQuestionModel.countDocuments({ setId });
+    await PracticeQuestionSetModel.updateOne({ _id: setId }, { $set: { totalQuestions: questionCount, totalMarks: questionCount } });
+    if (questionCount > 0) {
+      log.info('Demo practice MCQ questions seeded', { set: DEMO_SET_TITLE, count: questionCount });
+    }
   }
 }
 
