@@ -6,6 +6,7 @@ import { uploadBuffer, deleteGridFSFile, safeObjectId } from '../../config/gridf
 import { log } from '../../config/logger';
 import { normalizeForSearch, normalizeText, buildPreview } from '../../utils/text.utils';
 import { extractPdfPages, chunkBookPages, checksum } from './document-extraction.service';
+import { bookOcrService } from './book-ocr.service';
 import { EMBEDDING_MODEL, EMBEDDING_VERSION } from './embedding.service';
 
 export interface CreateBookInput {
@@ -90,7 +91,18 @@ export const bookIngestionService = {
         const chunks: Buffer[] = [];
         bucket.openDownloadStream(objectId).on('data', (d: Buffer) => chunks.push(d)).on('error', reject).on('end', () => resolve(Buffer.concat(chunks)));
       });
-      const { pages, warnings, pageCount } = await extractPdfPages(buffer, book.title);
+      let { pages, warnings, pageCount } = await extractPdfPages(buffer, book.title);
+      let ocrRan = false;
+      if (pages.length === 0) {
+        ocrRan = true;
+        log.info('PDF text extraction returned no pages - starting vision OCR fallback', { book: book.title, bookId: String(book._id) });
+        const ocr = await bookOcrService.extractPdfPagesViaVision(buffer, book.title, {
+          onProgress: (message) => log.info('Book OCR progress', { bookId: String(book._id), message }),
+        });
+        pages = ocr.pages;
+        warnings.push(...ocr.warnings);
+        pageCount = ocr.pageCount;
+      }
       await IngestionJobModel.updateOne({ _id: job._id }, { $set: { progress: 55, warnings } });
       await BookModel.updateOne({ _id: book._id }, { $set: { pageCount, processingProgress: 55 } });
 
@@ -123,6 +135,8 @@ export const bookIngestionService = {
           await BookChunkModel.insertMany(docs);
           chunkCount = docs.length;
         }
+      } else if (ocrRan) {
+        warnings.push('No text chunks created; vision OCR produced no text for this scanned PDF.');
       } else {
         warnings.push('No text chunks created ,  scanned PDF needs OCR review before publishing.');
       }
