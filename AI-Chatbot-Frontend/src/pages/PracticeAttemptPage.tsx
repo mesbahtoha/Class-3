@@ -24,6 +24,10 @@ function payloadOptions(payload: StudentQuestionPayload): string[] {
   return [];
 }
 
+function correctOptionInRange(options: string[], correctIndex: number): boolean {
+  return correctIndex >= 0 && correctIndex < options.length;
+}
+
 function splitFillBlanks(text: string): string[] {
   const parts = text.split(/\{\{(\d+)\}\}/);
   const blanks: string[] = [];
@@ -244,6 +248,7 @@ export function PracticeAttemptPage() {
                 index={index}
                 value={attempt.answers.find((entry) => String(entry.questionId) === question.questionId)?.value}
                 onChange={(value) => setAnswer(question.questionId, value)}
+                showFeedback={attempt.mode === 'practice'}
               />
             ))}
           </div>
@@ -307,9 +312,11 @@ interface AttemptQuestionCardProps {
   index: number;
   value: unknown;
   onChange: (value: unknown) => void;
+  /** In practice mode, MCQ answers show immediate Correct/Incorrect feedback when clicked. */
+  showFeedback?: boolean;
 }
 
-function AttemptQuestionCard({ question, index, value, onChange }: AttemptQuestionCardProps) {
+function AttemptQuestionCard({ question, index, value, onChange, showFeedback = false }: AttemptQuestionCardProps) {
   const id = `attempt-q-${question.questionId}`;
   const current = (value ?? {}) as Record<string, unknown>;
 
@@ -319,23 +326,44 @@ function AttemptQuestionCard({ question, index, value, onChange }: AttemptQuesti
     case 'mcq': {
       const options = payloadOptions(question.payload);
       const selectedIndex = typeof current.optionIndex === 'number' ? current.optionIndex : null;
+      const answerPayload = (question.answer ?? {}) as Record<string, unknown>;
+      const correctIndex = typeof answerPayload.correctIndex === 'number' ? answerPayload.correctIndex : null;
+      const mcqFeedback = showFeedback && selectedIndex !== null;
+      const mcqCorrect = correctIndex !== null && selectedIndex === correctIndex;
+      const correctOption = correctIndex !== null && correctOptionInRange(options, correctIndex) ? options[correctIndex] : null;
       content = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {options.map((option, optionIndex) => (
-            <button
-              key={option}
-              type="button"
-              className="pg-btn-secondary"
+          {options.map((option, optionIndex) => {
+            const isCorrectOption = mcqFeedback && correctIndex === optionIndex;
+            return (
+              <button
+                key={option}
+                type="button"
+                className="pg-btn-secondary"
+                style={{
+                  justifyContent: 'flex-start',
+                  borderColor: selectedIndex === optionIndex ? 'var(--accent-candy)' : isCorrectOption ? 'var(--success-text)' : undefined,
+                  background: selectedIndex === optionIndex ? 'var(--surface-mint-soft)' : isCorrectOption ? 'var(--surface-warn)' : undefined,
+                }}
+                onClick={() => onChange({ optionIndex })}
+              >
+                {mcqCorrect && correctIndex === optionIndex ? '✔ ' : ''}
+                {option}
+              </button>
+            );
+          })}
+          {mcqFeedback && (
+            <div
               style={{
-                justifyContent: 'flex-start',
-                borderColor: selectedIndex === optionIndex ? 'var(--accent-candy)' : undefined,
-                background: selectedIndex === optionIndex ? 'var(--surface-mint-soft)' : undefined,
+                marginTop: 4,
+                fontWeight: 800,
+                fontSize: 13,
+                color: mcqCorrect ? 'var(--success-text)' : 'var(--danger-text)',
               }}
-              onClick={() => onChange({ optionIndex })}
             >
-              {option}
-            </button>
-          ))}
+              {mcqCorrect ? '✔ Correct! Great choice.' : `✖ Incorrect. Correct answer: ${correctOption ?? 'N/A'}`}
+            </div>
+          )}
         </div>
       );
       break;

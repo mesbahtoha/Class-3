@@ -71,20 +71,27 @@ function isEmptyAnswer(value: unknown): boolean {
   return normalized.length === 0;
 }
 
-function toPublicQuestion(snapshot: QuestionSnapshot) {
-  return {
+function toPublicQuestion(snapshot: QuestionSnapshot, options: { reveal?: boolean } = {}) {
+  const publicQuestion = {
     questionId: snapshot.questionId,
     questionType: snapshot.questionType,
     order: snapshot.order,
     marks: snapshot.marks,
     payload: snapshot.payload,
   };
+  // In practice mode the student may see the correct answer while answering
+  // ("am I correct?"); exam mode keeps answers hidden until submission.
+  if (options.reveal) {
+    return { ...publicQuestion, answer: snapshot.answer };
+  }
+  return publicQuestion;
 }
 
 function toPublicAttempt(attempt: Record<string, unknown>, options: { includeResults?: boolean } = {}) {
   const questions = (Array.isArray(attempt.questions) ? attempt.questions : []) as QuestionSnapshot[];
   const answers = Array.isArray(attempt.answers) ? attempt.answers : [];
   const results = Array.isArray(attempt.results) ? (attempt.results as Array<Record<string, unknown>>) : [];
+  const revealAnswers = attempt.mode === 'practice';
 
   const publicAttempt: Record<string, unknown> = {
     _id: String(attempt._id),
@@ -99,7 +106,7 @@ function toPublicAttempt(attempt: Record<string, unknown>, options: { includeRes
     subject: String(attempt.subject ?? ''),
     chapters: Array.isArray(attempt.chapters) ? (attempt.chapters as ChapterRef[]) : [],
     questionType: attempt.questionType,
-    questions: questions.map(toPublicQuestion),
+    questions: questions.map((question) => toPublicQuestion(question, { reveal: revealAnswers })),
     answers,
     totalQuestions: Number(attempt.totalQuestions ?? questions.length),
     totalMarks: Number(attempt.totalMarks ?? 0),
