@@ -9,6 +9,14 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
+/** Status of a feature row in the public feature matrix. */
+export const DOCS_FEATURE_STATUSES = ['completed', 'in_progress', 'planned'] as const;
+export type DocsFeatureStatus = (typeof DOCS_FEATURE_STATUSES)[number];
+
+/** Roadmap categories used by the public roadmap. */
+export const DOCS_ROADMAP_CATEGORIES = ['shortTerm', 'midTerm', 'longTerm'] as const;
+export type DocsRoadmapCategory = (typeof DOCS_ROADMAP_CATEGORIES)[number];
+
 export const NOTICE_CATEGORIES = [
   'general',
   'exam',

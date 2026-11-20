@@ -18,6 +18,7 @@ import {
 import adminBooksController, { createBookSchema, updateBookSchema } from './admin-books.controller';
 import adminProvidersController, { updateProvidersSchema } from './admin-providers.controller';
 import adminPracticeRoutes from './admin-practice.routes';
+import adminDocsRoutes from '../docs/docs.admin.routes';
 import { uploadNoticeFile, uploadBookFile } from '../../../middleware/upload.middleware';
 
 const router = Router();
@@ -26,6 +27,9 @@ router.use(authenticate, requireAdmin);
 
 // Practice & examination management (admin only)
 router.use('/practice', adminPracticeRoutes);
+
+// Documentation management (admin only)
+router.use('/docs', adminDocsRoutes);
 
 // Dashboard
 router.get('/dashboard', adminController.dashboard);

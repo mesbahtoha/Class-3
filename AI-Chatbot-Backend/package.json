@@ -12,6 +12,7 @@
     "ingest:pdfs": "tsx scripts/ingest-pdfs.ts",
     "test:tutor": "tsx tests/run.ts",
     "test:practice": "tsx tests/practice.ts",
+    "test:docs": "tsx tests/docs.ts",
     "vercel-build": "npm run build"
   },
   "keywords": [

@@ -1,4 +1,4 @@
-import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel, BookModel, BookChunkModel, IngestionJobModel, PracticeQuestionSetModel, PracticeQuestionModel, PracticeAttemptModel } from '../database/models';
+import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel, BookModel, BookChunkModel, IngestionJobModel, PracticeQuestionSetModel, PracticeQuestionModel, PracticeAttemptModel, DocumentationContentModel, DocumentationVersionModel } from '../database/models';
 
 /**
  * Central index creation. Idempotent - safe to run on every boot.
@@ -69,6 +69,13 @@ export async function ensureIndexes(): Promise<void> {
     PracticeAttemptModel.collection.createIndex({ userId: 1, createdAt: -1 }),
     PracticeAttemptModel.collection.createIndex({ setId: 1, status: 1 }),
     PracticeAttemptModel.collection.createIndex({ status: 1, expiresAt: 1 })
+  );
+
+  // Documentation (public site + version history)
+  tasks.push(
+    DocumentationContentModel.collection.createIndex({ publishedVersion: -1 }),
+    DocumentationVersionModel.collection.createIndex({ version: -1 }),
+    DocumentationVersionModel.collection.createIndex({ publishedAt: -1 })
   );
 
   await Promise.allSettled(tasks);

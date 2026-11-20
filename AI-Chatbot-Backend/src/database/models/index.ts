@@ -19,3 +19,5 @@ export {
 } from './PracticeQuestionSet.model';
 export { PracticeQuestionModel, PracticeQuestionDocument } from './PracticeQuestion.model';
 export { PracticeAttemptModel, PracticeAttemptDocument } from './PracticeAttempt.model';
+export { DocumentationContentModel, DocumentationContentDoc, DocsBlock, DocsTeamMember, DocsSettings, DocsFeatureRow, DocsRoadmapEntry, DocsChangelogEntry, DocsDraft } from './DocumentationContent.model';
+export { DocumentationVersionModel, DocumentationVersionDoc } from './DocumentationVersion.model';

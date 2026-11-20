@@ -568,3 +568,98 @@ export interface AttemptResponse {
   duplicate?: boolean;
   autoSubmitted?: boolean;
 }
+
+// ---- Documentation site (/docs) ----
+
+export interface DocsBlock {
+  id: string;
+  heading: string;
+  body: string[];
+}
+
+export interface DocsFeatureRow {
+  name: string;
+  description: string;
+  status: 'completed' | 'in_progress' | 'planned';
+  route?: string;
+}
+
+export interface DocsRoadmapEntry {
+  category: 'shortTerm' | 'midTerm' | 'longTerm';
+  item: string;
+  description: string;
+}
+
+export interface DocsChangelogEntry {
+  version: string;
+  date: string;
+  title: string;
+  items: string[];
+}
+
+export interface DocsTeamMember {
+  id: string;
+  name: string;
+  role: string;
+  contact: string;
+  avatarId?: string;
+  isConfirmed?: boolean;
+}
+
+export interface DocsSettings {
+  enabled: boolean;
+  start: string | null;
+  end: string | null;
+  timezone: string;
+}
+
+export interface DocsDraft {
+  settings: DocsSettings;
+  pitchDeck: DocsBlock[];
+  productOverview: DocsBlock[];
+  featureMatrix: DocsFeatureRow[];
+  roadmap: DocsRoadmapEntry[];
+  teamMembers: DocsTeamMember[];
+  changelog: DocsChangelogEntry[];
+  draftVersion: number;
+  publishedVersion: number;
+}
+
+export type DocsContent = DocsDraft;
+
+export interface DocsMeta {
+  accessible: boolean;
+  enabled: boolean;
+  version: number;
+  window: { start: string | null; end: string | null; timezone: string };
+  updatedAt: string;
+}
+
+export interface PublicDocStats {
+  totalRegisteredUsers: number | null;
+  totalConversations: number | null;
+  totalMessages: number | null;
+  totalPublishedBooks: number | null;
+  totalPracticeExamAttempts: number | null;
+  totalPublishedPracticeSets: number | null;
+  totalAIUsageRecords: number | null;
+  activeUsers: number | null;
+  unavailable: boolean;
+  metricsUnavailable: string[];
+  generatedAt: string;
+}
+
+export interface DocsVersionEntry {
+  version: number;
+  publishedBy: string;
+  publishedAt: string;
+  content?: DocsDraft;
+}
+
+export interface AdminDocs {
+  doc: DocsDraft;
+  publishedVersion: number;
+  versions: DocsVersionEntry[];
+  updatedBy: string;
+  updatedAt: string;
+}

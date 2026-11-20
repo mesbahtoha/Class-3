@@ -24,6 +24,8 @@ const BookDetailPage = lazy(() => import('@/pages/BookDetailPage').then((m) => (
 const LearnPage = lazy(() => import('@/pages/LearnPage').then((m) => ({ default: m.LearnPage })));
 const PracticePage = lazy(() => import('@/pages/PracticePage').then((m) => ({ default: m.PracticePage })));
 const PracticeAttemptPage = lazy(() => import('@/pages/PracticeAttemptPage').then((m) => ({ default: m.PracticeAttemptPage })));
+const DocsPage = lazy(() => import('@/pages/DocsPage').then((m) => ({ default: m.DocsPage })));
+const DocsAdminPage = lazy(() => import('@/pages/admin/Docs').then((m) => ({ default: m.DocsAdminPage })));
 const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })));
 const ContactPage = lazy(() => import('@/pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const HelpPage = lazy(() => import('@/pages/HelpPage').then((m) => ({ default: m.HelpPage })));
@@ -78,6 +80,7 @@ export default function App() {
           <Route path="/learn/:lessonId" element={<LearnPage />} />
           <Route path="/learn" element={<LearnPage />} />
           <Route path="/practice" element={<PracticePage />} />
+          <Route path="/docs" element={<DocsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/help" element={<HelpPage />} />
@@ -106,6 +109,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/books" element={<AdminBooks />} />
             <Route path="/admin/practice" element={<AdminPractice />} />
+            <Route path="/admin/docs" element={<DocsAdminPage />} />
             <Route path="/admin/ai-settings" element={<AdminAISettings />} />
             <Route path="/admin/notices" element={<AdminNotices />} />
             <Route path="/admin/chats" element={<AdminChats />} />

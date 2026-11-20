@@ -8,6 +8,7 @@ import { LanguageProvider } from '@/lib/i18n';
 import './index.css';
 import './styles/polish.css';
 import './styles/practice.css';
+import './styles/docs.css';
 
 initTheme();
 
