@@ -16,9 +16,9 @@ export function HeroSection() {
         <div>
           <span className="pg-badge pg-badge-yellow" style={{ marginBottom: 14, display: 'inline-flex' }}>Shikhi Bondhu, Class 3 English Friend</span>
           <h1 id="landing-hero-title" style={{ fontSize: 48, lineHeight: 1.05, marginBottom: 14 }}>
-            Learn from your book, <span style={{ background: '#FBBF24', padding: '0 10px', borderRadius: 12, border: '2px solid #1E293B' }}>with joy</span> in easy Bangla
+            Learn from your book, <span style={{ background: '#FBBF24', color: '#1E293B', padding: '0 10px', borderRadius: 12, border: '2px solid #1E293B' }}>with joy</span> in easy Bangla
           </h1>
-          <p style={{ fontSize: 18, color: '#475569', marginBottom: 22, maxWidth: 520 }}>
+          <p style={{ fontSize: 18, color: 'var(--text-secondary)', marginBottom: 22, maxWidth: 520 }}>
             Your Class 3 study friend for English For Today. Ask with Unit, Lesson and Page number, get matching answers in simple words.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>

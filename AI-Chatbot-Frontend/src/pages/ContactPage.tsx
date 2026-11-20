@@ -31,7 +31,7 @@ export function ContactPage() {
       <div className="pg-container" style={{ maxWidth: 860, paddingTop: 32 }}>
         <span className="pg-badge pg-badge-mint" style={{ marginBottom: 12, display: 'inline-flex' }}>{bn ? 'যোগাযোগ' : 'Contact'}</span>
         <h1 style={{ fontSize: 30 }}>{bn ? 'আমাদের লেখো' : 'Write to us'}</h1>
-        <p style={{ color: '#64748B' }}>{bn ? 'পড়া, বই বা সমস্যা নিয়ে জানাও। আমরা সাধারণত ২ কর্মদিবসে উত্তর দিই।' : 'Tell us about lessons, books or issues. We usually reply within 2 working days.'}</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{bn ? 'পড়া, বই বা সমস্যা নিয়ে জানাও। আমরা সাধারণত ২ কর্মদিবসে উত্তর দিই।' : 'Tell us about lessons, books or issues. We usually reply within 2 working days.'}</p>
         <div className="contact-grid">
           <form className="pg-card" style={{ padding: 22 }} onSubmit={submit} noValidate>
             <label className="pg-field" htmlFor="ct-name"><span>{bn ? 'নাম' : 'Name'}</span>
@@ -57,10 +57,10 @@ export function ContactPage() {
           </form>
           <div className="pg-card pg-card-yellow-shadow" style={{ padding: 22 }}>
             <h3 style={{ fontSize: 17 }}>{bn ? 'সরাসরি যোগাযোগ' : 'Direct contact'}</h3>
-            <p style={{ color: '#475569', fontSize: 14.5 }}>hello@shikhibondhu.app<br />Dhaka, Bangladesh</p>
-            <div className="pg-card" style={{ padding: 14, background: '#FFFBEB' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14.5 }}>hello@shikhibondhu.app<br />Dhaka, Bangladesh</p>
+            <div className="pg-card" style={{ padding: 14, background: 'var(--surface-warn)' }}>
               <strong>{bn ? 'ছোটদের জন্য টিপস' : 'Tip for kids'}</strong>
-              <p style={{ margin: '6px 0 0', fontSize: 14, color: '#475569' }}>
+              <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>
                 {bn ? 'Unit, Lesson, Page আর Activity একসাথে লিখলে দ্রুত সঠিক উত্তর পাবে।' : 'Write Unit, Lesson, Page and Activity together for the fastest correct answer.'}
               </p>
             </div>

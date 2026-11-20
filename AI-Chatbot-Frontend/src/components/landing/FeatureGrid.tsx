@@ -42,7 +42,7 @@ export function FeatureGrid() {
         <h2 id="landing-features-title" style={{ fontSize: 32, marginBottom: 8, textAlign: 'center' }}>
           Made for little learners
         </h2>
-        <p style={{ textAlign: 'center', color: '#64748B', marginBottom: 28 }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: 28 }}>
           Everything a Class 3 child needs to finish English homework with a smile.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
@@ -52,7 +52,7 @@ export function FeatureGrid() {
                 <feature.icon />
               </div>
               <h3 style={{ fontSize: 17, marginBottom: 6 }}>{feature.title}</h3>
-              <p style={{ margin: 0, color: '#475569', fontSize: 14.5 }}>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
                 {feature.description}
               </p>
             </article>

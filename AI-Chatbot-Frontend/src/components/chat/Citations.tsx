@@ -71,7 +71,7 @@ export function Citations({ citations, sources }: { citations?: Citation[]; sour
   if (!unique.length && !bookRefs.length) return null;
 
   return (
-    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '2px solid #E2E8F0' }}>
+    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '2px solid var(--border-color)' }}>
       <div className="text-xs font-semibold text-muted mb-2">Sources</div>
       {bookRefs.length > 0 && (
         <div className="flex flex-col" style={{ gap: 4, marginBottom: unique.length ? 8 : 0 }}>

@@ -37,10 +37,10 @@ export function PracticePage() {
       <div className="pg-container" style={{ maxWidth: 700, paddingTop: 28 }}>
         <span className="pg-badge pg-badge-mint" style={{ marginBottom: 10, display: 'inline-flex' }}>Practice stars await</span>
         <h1 style={{ fontSize: 32, marginBottom: 6 }}>Practice time</h1>
-        <p style={{ color: '#64748B', marginBottom: 16 }}>Small questions, instant cheers. Start with the matching game below.</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Small questions, instant cheers. Start with the matching game below.</p>
         <div className="pg-card pg-card-yellow-shadow" style={{ padding: 20, marginBottom: 18 }}>
           <div style={{ fontWeight: 800, marginBottom: 4 }}>English For Today, Unit 3, Lesson 5</div>
-          <p style={{ margin: '0 0 12px', color: '#475569', fontSize: 14.5 }}>Page 45, Activity C. Match each request with the right reply.</p>
+          <p style={{ margin: '0 0 12px', color: 'var(--text-secondary)', fontSize: 14.5 }}>Page 45, Activity C. Match each request with the right reply.</p>
           <Link to="/exercise/match-requests" className="pg-btn-candy" style={{ textDecoration: 'none' }}>
             Open the matching game
           </Link>
@@ -67,7 +67,7 @@ export function PracticePage() {
                   style={{
                     justifyContent: 'flex-start',
                     borderColor: correct ? '#34D399' : wrong ? '#F472B6' : undefined,
-                    background: correct ? '#D1FAE5' : wrong ? '#FCE7F3' : undefined,
+                    background: correct ? 'var(--surface-mint-soft)' : wrong ? 'var(--surface-pink-soft)' : undefined,
                   }}
                   disabled={picked[i] !== undefined}
                   onClick={() => setPicked((p) => ({ ...p, [i]: j }))}

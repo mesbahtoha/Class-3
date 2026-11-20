@@ -24,7 +24,7 @@ export function HelpPage() {
       <div className="pg-container" style={{ maxWidth: 760, paddingTop: 32 }}>
         <span className="pg-badge pg-badge-pink" style={{ marginBottom: 12, display: 'inline-flex' }}>{bn ? 'সাহায্য' : 'Help'}</span>
         <h1 style={{ fontSize: 30 }}>{bn ? 'সাহায্য কেন্দ্র' : 'Help center'}</h1>
-        <p style={{ color: '#64748B' }}>{bn ? 'দ্রুত উত্তর পেতে নিচের প্রশ্নগুলো দেখো।' : 'Find quick answers below.'}</p>
+        <p style={{ color: 'var(--text-secondary)' }}>{bn ? 'দ্রুত উত্তর পেতে নিচের প্রশ্নগুলো দেখো।' : 'Find quick answers below.'}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
           {faqs.map((f, i) => (
             <div key={f.q} className="pg-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -35,7 +35,7 @@ export function HelpPage() {
               >
                 {i + 1}. {f.q}
               </button>
-              {open === i && <p style={{ padding: '0 18px 16px', margin: 0, color: '#475569' }}>{f.a}</p>}
+              {open === i && <p style={{ padding: '0 18px 16px', margin: 0, color: 'var(--text-secondary)' }}>{f.a}</p>}
             </div>
           ))}
         </div>

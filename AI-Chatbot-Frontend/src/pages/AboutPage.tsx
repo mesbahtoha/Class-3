@@ -13,7 +13,7 @@ export function AboutPage() {
           <Mascot size={88} />
           <div style={{ flex: '1 1 260px' }}>
             <h1 style={{ fontSize: 30, marginBottom: 8 }}>{bn ? 'শিখি বন্ধু কী করে' : 'What Shikhi Bondhu does'}</h1>
-            <p style={{ color: '#475569', margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
               {bn
                 ? 'শিখি বন্ধু তৃতীয় শ্রেণির English For Today বইভিত্তিক পড়ার বন্ধু। Unit, Lesson আর Page নম্বর দিলে বইয়ের অংশ খুঁজে সহজ বাংলায় বুঝিয়ে দেয়। ছবি দরকার নেই, ছোট লেখাই যথেষ্ট।'
                 : 'Shikhi Bondhu is a Class 3 study friend built around English For Today. Give Unit, Lesson and Page number and it finds the book section and explains in easy Bangla. Short text is enough, no photo needed.'}
@@ -30,14 +30,14 @@ export function AboutPage() {
           ].map((c) => (
             <article key={c.t} className="pg-card hover-lift" style={{ padding: 20 }}>
               <h3 style={{ fontSize: 16, marginBottom: 6 }}>{c.t}</h3>
-              <p style={{ margin: 0, color: '#475569', fontSize: 14.5 }}>{c.d}</p>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>{c.d}</p>
             </article>
           ))}
         </div>
 
         <div className="pg-card pg-card-mint-shadow" style={{ padding: 24, marginTop: 18, textAlign: 'center' }}>
           <h2 style={{ fontSize: 22 }}>{bn ? 'আজ কী শিখবে' : 'What will you learn today'}</h2>
-          <p style={{ color: '#64748B' }}>{bn ? 'লগইন ছাড়া চেষ্টা করো, অথবা অ্যাকাউন্ট করে তারা আর অগ্রগতি সংরক্ষণ করো।' : 'Try without login, or make an account to save stars and progress.'}</p>
+          <p style={{ color: 'var(--text-secondary)' }}>{bn ? 'লগইন ছাড়া চেষ্টা করো, অথবা অ্যাকাউন্ট করে তারা আর অগ্রগতি সংরক্ষণ করো।' : 'Try without login, or make an account to save stars and progress.'}</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/tutor" className="pg-btn-candy">{bn ? 'পড়া শুরু করো' : 'Start learning'}</Link>
             <Link to="/books" className="pg-btn-secondary">{bn ? 'বই দেখো' : 'See books'}</Link>

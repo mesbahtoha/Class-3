@@ -17,14 +17,14 @@ export function ChatPreview() {
             <div>Shikhi Bondhu solves all 5 matches at once, with Bangla meaning for each line.</div>
           </div>
         </div>
-        <div className="pg-card" style={{ padding: 22, background: '#F4F0FF' }}>
+        <div className="pg-card" style={{ padding: 22, background: 'var(--surface-accent)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <span style={{ width: 38, height: 38, borderRadius: '50%', background: '#8B5CF6', color: '#fff', display: 'grid', placeItems: 'center', border: '2px solid #1E293B' }}>
               <FaRobot size={16} />
             </span>
             <strong>Shikhi Bondhu is online</strong>
           </div>
-          <p style={{ color: '#475569', marginBottom: 16 }}>Short Unit Lesson Page text is enough. No photo needed. Tap below to try the real game.</p>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Short Unit Lesson Page text is enough. No photo needed. Tap below to try the real game.</p>
           <button className="pg-btn-candy" onClick={() => navigate('/exercise/match-requests')} style={{ width: '100%' }}>
             Open matching game
           </button>

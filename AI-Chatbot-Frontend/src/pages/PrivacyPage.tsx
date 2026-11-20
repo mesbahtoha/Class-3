@@ -22,9 +22,9 @@ export function PrivacyPage() {
             ['Your control', 'You can delete chats. To close your account, write on the Contact page.'],
             ['Contact', 'Questions, write to hello@shikhibondhu.app.'],
           ]).map(([h, p]) => (
-            <section key={h} style={{ padding: '12px 0', borderTop: '2px solid #F1F5F9' }}>
+            <section key={h} style={{ padding: '12px 0', borderTop: '2px solid var(--border-color)' }}>
               <h3 style={{ fontSize: 16, marginBottom: 4 }}>{h}</h3>
-              <p style={{ margin: 0, color: '#475569' }}>{p}</p>
+              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{p}</p>
             </section>
           ))}
         </div>

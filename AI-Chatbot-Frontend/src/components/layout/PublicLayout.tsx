@@ -35,7 +35,8 @@ export function PublicLayout() {
 
   const linkStyle = ({ isActive }: { isActive: boolean }) => ({
     padding: '8px 13px', borderRadius: 999, fontWeight: 700 as const, fontSize: 13.5,
-    color: isActive ? '#fff' : '#1E293B', background: isActive ? '#1E293B' : 'transparent',
+    color: isActive ? 'var(--bg-body)' : 'var(--text-primary)',
+    background: isActive ? 'var(--text-primary)' : 'transparent',
     textDecoration: 'none' as const,
   });
 

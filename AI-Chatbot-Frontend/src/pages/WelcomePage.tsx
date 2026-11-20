@@ -19,7 +19,7 @@ export function WelcomePage() {
         <div className="pg-card pg-card-yellow-shadow" style={{ padding: 32 }}>
           <div style={{ fontSize: 52 }} aria-hidden="true">Open book</div>
           <h1 style={{ fontSize: 30, margin: '12px 0 8px' }}>Welcome to Shikhi Bondhu</h1>
-          <p style={{ color: '#64748B', marginBottom: 24 }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
             Learn easy lessons from your Class 3 book, with pictures and fun.
             {user ? ` (You are logged in as ${user.name})` : ' Log in or try as a guest.'}
           </p>
@@ -29,7 +29,7 @@ export function WelcomePage() {
                 <button className="pg-btn-candy" onClick={() => navigate('/login')}>Log in with email</button>
                 <button className="pg-btn-secondary" onClick={() => navigate('/register')}>Make a new account</button>
                 <button className="pg-btn-secondary" onClick={continueAsGuest}>Continue as guest</button>
-                <p style={{ fontSize: 12.5, color: '#64748B' }}>
+                <p style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
                   As a guest you can ask text questions only. Log in for photos, voice, saved history and progress.
                 </p>
               </>
@@ -41,7 +41,7 @@ export function WelcomePage() {
               </>
             )}
           </div>
-          <p style={{ fontSize: 12.5, color: '#64748B', marginTop: 24, marginBottom: 0 }}>
+          <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 24, marginBottom: 0 }}>
             This helps with study. It does not replace parents or teachers. We keep very little data.
           </p>
         </div>

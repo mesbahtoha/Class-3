@@ -205,7 +205,7 @@ export function AdminBooks() {
                 {detail.book.processingState} • {detail.book.processingProgress ?? 0}% • {detail.book.chunkCount ?? 0} চাঙ্ক • {detail.book.pageCount ?? 0} পৃষ্ঠা
               </span>
             </div>
-            {detail.book.processingError && <p style={{ color: '#e5484d' }}>⚠️ {detail.book.processingError}</p>}
+            {detail.book.processingError && <p style={{ color: 'var(--danger-text)' }}>⚠️ {detail.book.processingError}</p>}
             <div className="font-semibold" style={{ margin: '10px 0 4px' }}>প্রসেসিং কাজ</div>
             {detail.jobs.length === 0 && <p className="text-muted">কোনো কাজ নেই।</p>}
             {detail.jobs.map((j) => (

@@ -42,7 +42,7 @@ export function LearnPage() {
       <div className="pg-container" style={{ maxWidth: 720, paddingTop: 28 }}>
         <span className="pg-badge pg-badge-mint" style={{ marginBottom: 10, display: 'inline-flex' }}>Lesson player</span>
         <h1 style={{ fontSize: 30, marginBottom: 6 }}>Watch a lesson</h1>
-        <p style={{ color: '#64748B', marginBottom: 16 }}>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
           Paste lesson JSON from your teacher to view it here. Only safe slide types are allowed.
         </p>
         {!lesson && (
@@ -51,7 +51,7 @@ export function LearnPage() {
             <div className="pg-card" style={{ padding: 18, marginTop: 16 }}>
               <div style={{ fontWeight: 800, marginBottom: 8 }}>Paste your own lesson (optional)</div>
               <textarea className="pg-input" rows={5} value={json} onChange={(e) => setJson(e.target.value)} placeholder='{"lessonId":"...","title":"...","slides":[...]}' style={{ width: '100%', fontFamily: 'monospace' }} />
-              {error && <p style={{ color: '#DC2626', marginTop: 8 }}>Note: {error}</p>}
+              {error && <p style={{ color: 'var(--danger-text)', marginTop: 8 }}>Note: {error}</p>}
               <div style={{ marginTop: 10 }}>
                 <button className="pg-btn-candy" onClick={loadJson}>Show lesson</button>
               </div>

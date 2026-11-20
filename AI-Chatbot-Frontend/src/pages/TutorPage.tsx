@@ -72,10 +72,10 @@ function RefHelper({ question }: { question: string }) {
   return (
     <div
       className="pg-card pg-card-yellow-shadow"
-      style={{ padding: 14, marginBottom: 12, background: '#FFFBEB' }}
+      style={{ padding: 14, marginBottom: 12, background: 'var(--surface-warn)' }}
     >
       <div style={{ fontWeight: 800, marginBottom: 4 }}>I found your book part: {ref.label}</div>
-      <p style={{ margin: '0 0 10px', color: '#475569', fontSize: 14 }}>
+      <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: 14 }}>
         {ref.isMatchRequests
           ? 'This is the request matching task. You can read the answer below or play it as a game.'
           : 'Nice. You wrote Unit, Lesson and Page together. That helps me find the exact answer.'}
@@ -195,7 +195,7 @@ export function TutorPage() {
     <div className="pg-app" style={{ paddingBottom: 190 }}>
       <div className="pg-container" style={{ maxWidth: 780, paddingTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-          <h1 style={{ fontSize: 26 }}>Shikhi Bondhu <span style={{ fontSize: 13, color: '#64748B', fontWeight: 500 }}>Class 3 English Friend</span></h1>
+          <h1 style={{ fontSize: 26 }}>Shikhi Bondhu <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>Class 3 English Friend</span></h1>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {!authed && <Link to="/welcome" className="pg-badge pg-badge-yellow" style={{ textDecoration: 'none' }}>Guest mode</Link>}
             {authed && <Link to="/chat" className="pg-badge pg-badge-mint" style={{ textDecoration: 'none' }}>Chat with history</Link>}
@@ -211,7 +211,7 @@ export function TutorPage() {
             <span className="pg-badge pg-badge-pink">2. Add Lesson and Page</span>
             <span className="pg-badge pg-badge-yellow">3. Add Activity</span>
           </div>
-          <p style={{ margin: '0 0 10px', color: '#475569', fontSize: 14.5 }}>Example: Unit 3, Lesson 5, Page 45, Match the requests.</p>
+          <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: 14.5 }}>Example: Unit 3, Lesson 5, Page 45, Match the requests.</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <select className="pg-input" value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Pick subject" style={{ minWidth: 140 }}>
               <option value="">All subjects</option>
@@ -227,7 +227,7 @@ export function TutorPage() {
             </select>
           </div>
           {!authed && (
-            <p style={{ marginTop: 10, fontSize: 12.5, color: '#64748B' }}>
+            <p style={{ marginTop: 10, fontSize: 12.5, color: 'var(--text-secondary)' }}>
               Guest mode allows text questions only. <Link to="/welcome">Log in</Link> for photos and saved history.
             </p>
           )}
@@ -237,7 +237,7 @@ export function TutorPage() {
           <div className="pg-card pg-card-yellow-shadow" style={{ padding: 22, textAlign: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 44 }} aria-hidden="true">📖</div>
             <h2 style={{ fontSize: 20, margin: '8px 0' }}>What will you learn today</h2>
-            <p style={{ color: '#64748B', marginBottom: 12 }}>Tap one below. Bangla or Banglish is fine. Answer comes in easy Bangla.</p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>Tap one below. Bangla or Banglish is fine. Answer comes in easy Bangla.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
               {EXAMPLES.map((ex) => (
                 <button key={ex} className="pg-btn-secondary" style={{ fontSize: 13, padding: '8px 16px', minHeight: 40, width: 'auto' }} onClick={() => void send(ex)} disabled={sending}>
@@ -251,8 +251,8 @@ export function TutorPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {turns.map((turn) => (
             <div key={turn.id}>
-              <div className="pg-card" style={{ padding: 14, background: '#F1F5F9' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#64748B', marginBottom: 4 }}>You wrote:</div>
+              <div className="pg-card" style={{ padding: 14, background: 'var(--surface-subtle)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>You wrote:</div>
                 <div style={{ whiteSpace: 'pre-wrap', fontWeight: 600 }}>{turn.question}</div>
                 {!!turn.attachments?.length && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
@@ -260,7 +260,7 @@ export function TutorPage() {
                       <span
                         key={attachment.id}
                         className="pg-badge"
-                        style={{ fontSize: 11.5, padding: '4px 10px', boxShadow: '2px 2px 0 0 #1E293B' }}
+                        style={{ fontSize: 11.5, padding: '4px 10px', boxShadow: '2px 2px 0 0 var(--border-strong)' }}
                       >
                         {attachment.type === 'image' ? '📷' : '📄'} {attachment.name}
                       </span>
@@ -269,17 +269,17 @@ export function TutorPage() {
                 )}
               </div>
               <div className="pg-card pg-card-mint-shadow" style={{ padding: 18, marginTop: 10 }}>
-                {turn.pending && <p style={{ color: '#64748B' }}>Friend is thinking...</p>}
-                {turn.stopped && <p style={{ color: '#64748B' }}>Stopped. Ask again whenever you are ready.</p>}
-                {turn.error && <p style={{ color: '#DC2626' }}>{turn.error}</p>}
+                {turn.pending && <p style={{ color: 'var(--text-secondary)' }}>Friend is thinking...</p>}
+                {turn.stopped && <p style={{ color: 'var(--text-secondary)' }}>Stopped. Ask again whenever you are ready.</p>}
+                {turn.error && <p style={{ color: 'var(--danger-text)' }}>{turn.error}</p>}
                 {turn.response && (
                   <>
                     <RefHelper question={turn.question} />
                     <MarkdownRenderer content={turn.response.answer} />
                     {turn.response.answerStatus === 'INSUFFICIENT_BOOK_CONTEXT' && (
-                      <div className="pg-card" style={{ padding: 12, marginTop: 10, background: '#FFFBEB' }}>
+                      <div className="pg-card" style={{ padding: 12, marginTop: 10, background: 'var(--surface-warn)' }}>
                         <p className="pg-badge pg-badge-yellow" style={{ marginBottom: 8 }}>General help, not found in book</p>
-                        <p style={{ margin: '8px 0', fontSize: 14, color: '#475569' }}>
+                        <p style={{ margin: '8px 0', fontSize: 14, color: 'var(--text-secondary)' }}>
                           Tip: write Unit, Lesson, Page and Activity together. Or paste the full question text for a perfect check.
                         </p>
                         <Link to={MATCH_REQUESTS_PATH} className="pg-btn-secondary" style={{ textDecoration: 'none', minHeight: 44, width: 'auto' }}>
@@ -288,8 +288,8 @@ export function TutorPage() {
                       </div>
                     )}
                     {turn.response.sources.length > 0 && (
-                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '2px solid #E2E8F0' }}>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: '#64748B', marginBottom: 6 }}>Book source</div>
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '2px solid var(--border-color)' }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)', marginBottom: 6 }}>Book source</div>
                         {turn.response.sources.map((s) => (
                           <div key={s.chunkId} style={{ fontSize: 14, marginBottom: 4 }}>
                             Book: {s.bookTitle}
@@ -303,8 +303,8 @@ export function TutorPage() {
                     {turn.response.followUpQuestion && (
                       <p className="text-sm" style={{ marginTop: 10 }}>Now you try. {turn.response.followUpQuestion}</p>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, paddingTop: 12, borderTop: '2px solid #E2E8F0', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12.5, color: '#64748B', fontWeight: 700 }}>Did this help</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, paddingTop: 12, borderTop: '2px solid var(--border-color)', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 12.5, color: 'var(--text-secondary)', fontWeight: 700 }}>Did this help</span>
                       <button
                         className="pg-btn-secondary"
                         style={{ minHeight: 38, padding: '6px 14px', fontSize: 13, width: 'auto' }}
@@ -328,11 +328,11 @@ export function TutorPage() {
                           Make practice question
                         </button>
                       )}
-                      {turn.quizPending && <span style={{ fontSize: 12.5, color: '#64748B' }}>Making question...</span>}
+                      {turn.quizPending && <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>Making question...</span>}
                     </div>
                     {turn.quiz && <QuizCard quiz={turn.quiz.quiz} sources={turn.quiz.sources} />}
                     {turn.quizTried && !turn.quizPending && !turn.quiz && (
-                      <p style={{ fontSize: 12.5, color: '#64748B', marginTop: 8 }}>No question ready for this yet. Try another topic from your book.</p>
+                      <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 8 }}>No question ready for this yet. Try another topic from your book.</p>
                     )}
                   </>
                 )}
@@ -348,7 +348,7 @@ export function TutorPage() {
             left: 0,
             right: 0,
             background: 'var(--bg-surface)',
-            borderTop: '2px solid #1E293B',
+            borderTop: '2px solid var(--border-color)',
             padding: '10px 16px',
             zIndex: 40,
           }}
@@ -391,11 +391,11 @@ export function TutorPage() {
         <p style={{ marginTop: 0, fontWeight: 600 }}>
           {loginFeature ? LOCKED_FEATURE_TEXT[loginFeature].detail : ''}
         </p>
-        <p style={{ color: '#64748B', fontSize: 14 }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
           Attachments, voice input, voice conversation, reply language and answer mode are for
           logged-in learners. This keeps your files private and saves your progress.
         </p>
-        <p style={{ color: '#64748B', fontSize: 14, marginBottom: 0 }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 0 }}>
           আগে লগইন করো, তারপর এই সুবিধাগুলো ব্যবহার করো। গেস্ট হিসেবে তুমি লেখা প্রশ্ন করতে পারো।
         </p>
       </Modal>
