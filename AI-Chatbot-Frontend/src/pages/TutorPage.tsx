@@ -11,7 +11,7 @@ import { guestChat, tutorChat, listBooks, makeTutorQuiz, sendTutorFeedback } fro
 import { getErrorMessage } from '@/lib/api';
 import { useTutorStore } from '@/store/tutor.store';
 import { useAuthStore } from '@/store/auth.store';
-import { parseTextbookRef, MATCH_REQUESTS_PATH } from '@/lib/textbookRef';
+import { parseTextbookRef } from '@/lib/textbookRef';
 import type { AIMode, BookInfo, ChatAttachment, QuizPreview, TutorResponse, TutorSource } from '@/types';
 
 interface Turn {
@@ -76,13 +76,13 @@ function RefHelper({ question }: { question: string }) {
     >
       <div style={{ fontWeight: 800, marginBottom: 4 }}>I found your book part: {ref.label}</div>
       <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)', fontSize: 14 }}>
-        {ref.isMatchRequests
-          ? 'This is the request matching task. You can read the answer below or play it as a game.'
+        {ref.exercise
+          ? 'This is the letter exercise. You can read the answer below or practice it in the Practice section.'
           : 'Nice. You wrote Unit, Lesson and Page together. That helps me find the exact answer.'}
       </p>
-      {ref.isMatchRequests && (
-        <Link to={MATCH_REQUESTS_PATH} className="pg-btn-secondary" style={{ textDecoration: 'none', minHeight: 44 }}>
-          Play the matching game
+      {ref.exercise && (
+        <Link to="/practice" className="pg-btn-secondary" style={{ textDecoration: 'none', minHeight: 44 }}>
+          Practice this exercise
         </Link>
       )}
     </div>
@@ -199,8 +199,7 @@ export function TutorPage() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {!authed && <Link to="/welcome" className="pg-badge pg-badge-yellow" style={{ textDecoration: 'none' }}>Guest mode</Link>}
             {authed && <Link to="/chat" className="pg-badge pg-badge-mint" style={{ textDecoration: 'none' }}>Chat with history</Link>}
-            <Link to={MATCH_REQUESTS_PATH} className="pg-badge pg-badge-pink" style={{ textDecoration: 'none' }}>Matching game</Link>
-            <Link to="/practice" className="pg-badge pg-badge-yellow" style={{ textDecoration: 'none' }}>Practice</Link>
+            <Link to="/practice" className="pg-badge pg-badge-pink" style={{ textDecoration: 'none' }}>Practice</Link>
           </div>
         </div>
 
@@ -282,8 +281,8 @@ export function TutorPage() {
                         <p style={{ margin: '8px 0', fontSize: 14, color: 'var(--text-secondary)' }}>
                           Tip: write Unit, Lesson, Page and Activity together. Or paste the full question text for a perfect check.
                         </p>
-                        <Link to={MATCH_REQUESTS_PATH} className="pg-btn-secondary" style={{ textDecoration: 'none', minHeight: 44, width: 'auto' }}>
-                          Try the matching game
+                        <Link to="/practice" className="pg-btn-secondary" style={{ textDecoration: 'none', minHeight: 44, width: 'auto' }}>
+                          Practice this request
                         </Link>
                       </div>
                     )}

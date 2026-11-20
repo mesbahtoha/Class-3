@@ -386,3 +386,180 @@ export interface SystemInfo {
   queue?: { pending: number; processing: number };
   routes?: number;
 }
+
+// ---- Practice & Examination ----
+
+export type PracticeQuestionType =
+  | 'mcq'
+  | 'fill_blank'
+  | 'true_false'
+  | 'matching'
+  | 'one_word'
+  | 'rearrange'
+  | 'translation';
+
+export type PracticeDifficulty = 'easy' | 'medium' | 'hard';
+export type PracticeMode = 'practice' | 'exam';
+export type PracticePublicationState = 'draft' | 'published';
+
+export interface ChapterRef {
+  id: string;
+  title: string;
+  order: number;
+}
+
+export interface PracticeQuestionSet {
+  _id: string;
+  title: string;
+  bookId: string;
+  bookTitle: string;
+  subject: string;
+  chapters: ChapterRef[];
+  questionType: PracticeQuestionType;
+  difficulty: PracticeDifficulty;
+  instructions: string;
+  marksPerQuestion: number;
+  totalQuestions: number;
+  totalMarks: number;
+  practiceModeEnabled: boolean;
+  examModeEnabled: boolean;
+  examDurationMinutes: number | null;
+  negativeMarking: number;
+  allowUnanswered: boolean;
+  draft: boolean;
+}
+
+export interface PracticeBookSummary {
+  _id: string;
+  title: string;
+  subject: string;
+  grade: string;
+  curriculum: string;
+  language: string;
+  edition: string;
+  publisher: string;
+  chunkCount: number;
+  pageCount: number;
+}
+
+export interface PracticeChapterSummary {
+  id: string;
+  title: string;
+  order: number;
+}
+
+export interface PracticeQuestionSetSummary extends PracticeQuestionSet {}
+
+export interface MatchingItem {
+  id: string;
+  text: string;
+}
+
+export interface McqQuestionPayload {
+  question: string;
+  options: string[];
+}
+
+export interface FillBlankQuestionPayload {
+  text: string;
+}
+
+export interface TrueFalseQuestionPayload {
+  statement: string;
+}
+
+export interface MatchingQuestionPayload {
+  left: MatchingItem[];
+  right: MatchingItem[];
+}
+
+export interface OneWordQuestionPayload {
+  question: string;
+}
+
+export interface RearrangeQuestionPayload {
+  items: MatchingItem[];
+}
+
+export interface TranslationQuestionPayload {
+  source: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+}
+
+export type StudentQuestionPayload =
+  | McqQuestionPayload
+  | FillBlankQuestionPayload
+  | TrueFalseQuestionPayload
+  | MatchingQuestionPayload
+  | OneWordQuestionPayload
+  | RearrangeQuestionPayload
+  | TranslationQuestionPayload;
+
+export interface AttemptQuestion {
+  questionId: string;
+  questionType: PracticeQuestionType;
+  order: number;
+  marks: number;
+  payload: StudentQuestionPayload;
+}
+
+export interface QuestionResult {
+  questionId: string;
+  questionType: PracticeQuestionType;
+  order: number;
+  marks: number;
+  marksAwarded: number;
+  answered: boolean;
+  correct: boolean;
+  studentAnswer: unknown;
+  correctAnswer: string | string[];
+  breakdown: Array<{ label: string; student: string; correct: string; correctFlag: boolean; marks: number; marksAwarded: number }>;
+}
+
+export interface PracticeAttempt {
+  _id: string;
+  userId: string;
+  setId: string;
+  title: string;
+  mode: PracticeMode;
+  status: 'in_progress' | 'submitted';
+  preview: boolean;
+  bookId: string;
+  bookTitle: string;
+  subject: string;
+  chapters: ChapterRef[];
+  questionType: PracticeQuestionType;
+  questions: AttemptQuestion[];
+  answers: Array<{ questionId: string; value: unknown }>;
+  totalQuestions: number;
+  totalMarks: number;
+  obtainedMarks: number;
+  percentage: number;
+  durationMinutes: number | null;
+  expiresAt: string | null;
+  startedAt: string;
+  submittedAt: string | null;
+  autoSubmitted: boolean;
+  allowUnanswered: boolean;
+  correctCount: number;
+  incorrectCount: number;
+  unansweredCount: number;
+  results?: QuestionResult[];
+}
+
+export interface AttemptResponse {
+  attempt: PracticeAttempt;
+  evaluation?: {
+    results: QuestionResult[];
+    totalQuestions: number;
+    totalMarks: number;
+    obtainedMarks: number;
+    percentage: number;
+    correctCount: number;
+    incorrectCount: number;
+    unansweredCount: number;
+  };
+  duplicate?: boolean;
+  autoSubmitted?: boolean;
+}

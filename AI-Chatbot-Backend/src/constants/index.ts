@@ -87,6 +87,30 @@ export const DEFAULT_SETTINGS = {
 export const AI_MODES = ['fast', 'balanced', 'accurate'] as const;
 export type AIMode = (typeof AI_MODES)[number];
 
+/* ------------------------------------------------------------------ */
+/* Practice & Examination                                              */
+/* ------------------------------------------------------------------ */
+
+export const PRACTICE_QUESTION_TYPES = [
+  'mcq',
+  'fill_blank',
+  'true_false',
+  'matching',
+  'one_word',
+  'rearrange',
+  'translation',
+] as const;
+export type PracticeQuestionType = (typeof PRACTICE_QUESTION_TYPES)[number];
+
+export const PRACTICE_DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+export type PracticeDifficulty = (typeof PRACTICE_DIFFICULTIES)[number];
+
+export const PRACTICE_MODES = ['practice', 'exam'] as const;
+export type PracticeMode = (typeof PRACTICE_MODES)[number];
+
+export const PRACTICE_PUBLICATION_STATES = ['draft', 'published'] as const;
+export type PracticePublicationState = (typeof PRACTICE_PUBLICATION_STATES)[number];
+
 /** Temporary chat attachments (upload -> analyze -> answer -> discard). */
 export const CHAT_ATTACHMENT_LIMITS = {
   maxSizeBytes: 10 * 1024 * 1024,

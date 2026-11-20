@@ -1,0 +1,39 @@
+/* Practice & Examination - student UI additions */
+
+.pg-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  flex: none;
+}
+
+.progress-track {
+  width: 100%;
+  background: var(--surface-cream);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: var(--accent-candy);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.pg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface-mint-soft);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  font-weight: 700;
+}

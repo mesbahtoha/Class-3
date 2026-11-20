@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
-import type { ApiError } from '@/types';
+import type { ApiError, AttemptResponse, PracticeAttempt, PracticeBookSummary, PracticeChapterSummary, PracticeQuestionSetSummary, QuestionResult } from '@/types';
 
 const ACCESS_KEY = 'nf_access_token';
 const REFRESH_KEY = 'nf_refresh_token';
@@ -145,6 +145,148 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) return error.message;
   if (axios.isAxiosError(error)) return error.response?.data?.message || error.message;
   return error instanceof Error ? error.message : 'Something went wrong';
+}
+
+// ---- Practice & Examination ----
+
+export type { AttemptResponse, PracticeAttempt, PracticeBookSummary, PracticeChapterSummary, PracticeQuestionSetSummary, QuestionResult };
+
+export async function listPracticeBooks(): Promise<{ books: PracticeBookSummary[] }> {
+  return apiGet<{ books: PracticeBookSummary[] }>('/api/v1/practice/books');
+}
+
+export async function listPracticeChapters(bookId: string): Promise<{ chapters: PracticeChapterSummary[] }> {
+  return apiGet<{ chapters: PracticeChapterSummary[] }>(`/api/v1/practice/books/${bookId}/chapters`);
+}
+
+export async function listPracticeSets(params: { bookId?: string; chapterIds?: string[]; questionType?: string; mode?: string }) {
+  const query = new URLSearchParams();
+  if (params.bookId) query.set('bookId', params.bookId);
+  (params.chapterIds ?? []).forEach((id) => query.append('chapterIds', id));
+  if (params.questionType) query.set('questionType', params.questionType);
+  if (params.mode) query.set('mode', params.mode);
+  const qs = query.toString();
+  return apiGet<{ sets: PracticeQuestionSetSummary[]; total: number; page: number; limit: number }>(
+    `/api/v1/practice/sets${qs ? `?${qs}` : ''}`
+  );
+}
+
+export async function getPracticeSet(id: string): Promise<{ set: PracticeQuestionSetSummary }> {
+  return apiGet<{ set: PracticeQuestionSetSummary }>(`/api/v1/practice/sets/${id}`);
+}
+
+export async function startPracticeAttempt(body: { setId: string; mode: 'practice' | 'exam'; chapters?: string[] }) {
+  const { data } = await api.post<{ success: boolean; attempt: import('@/types').PracticeAttempt; created?: boolean }>('/api/v1/practice/attempts', body);
+  return data;
+}
+
+export async function getPracticeAttempt(id: string) {
+  return apiGet<import('@/types').AttemptResponse>(`/api/v1/practice/attempts/${id}`);
+}
+
+export async function savePracticeAnswers(id: string, answers: Array<{ questionId: string; value: unknown }>) {
+  const { data } = await api.post<{ success: boolean; attempt: import('@/types').PracticeAttempt; autoSubmitted?: boolean }>(
+    `/api/v1/practice/attempts/${id}/answers`,
+    answers
+  );
+  return data;
+}
+
+export async function submitPracticeAnswers(id: string, answers: Array<{ questionId: string; value: unknown }>) {
+  const { data } = await api.post<{ success: boolean; attempt: import('@/types').PracticeAttempt; evaluation: import('@/types').AttemptResponse['evaluation']; duplicate?: boolean; autoSubmitted?: boolean }>(
+    `/api/v1/practice/attempts/${id}/submit`,
+    answers
+  );
+  return data;
+}
+
+export async function listPracticeAttempts(params?: { mode?: string; limit?: number }) {
+  const query = new URLSearchParams();
+  if (params?.mode) query.set('mode', params.mode);
+  if (params?.limit) query.set('limit', String(params.limit));
+  const qs = query.toString();
+  return apiGet<{ attempts: Array<Record<string, unknown>> }>(`/api/v1/practice/attempts${qs ? `?${qs}` : ''}`);
+}
+
+// ---- Admin: Practice & Examination management ----
+
+export interface AdminPracticeSetRow extends PracticeQuestionSetSummary {
+  questionCount: number;
+}
+
+export async function listAdminPracticeSets(params: Record<string, unknown>) {
+  const queryParts = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+  const qs = queryParts.join('&');
+  return apiGet<{ sets: AdminPracticeSetRow[]; total: number; page: number; limit: number }>(`/api/v1/admin/practice/sets${qs ? `?${qs}` : ''}`);
+}
+
+export async function createAdminPracticeSet(body: Record<string, unknown>) {
+  const { data } = await api.post<{ success: boolean; set: AdminPracticeSetRow }>('/api/v1/admin/practice/sets', body);
+  return data;
+}
+
+export async function updateAdminPracticeSet(setId: string, body: Record<string, unknown>) {
+  const { data } = await api.patch<{ success: boolean; set: AdminPracticeSetRow }>(`/api/v1/admin/practice/sets/${setId}`, body);
+  return data;
+}
+
+export async function deleteAdminPracticeSet(setId: string) {
+  const { data } = await api.delete<{ success: boolean; deleted: boolean }>(`/api/v1/admin/practice/sets/${setId}`);
+  return data;
+}
+
+export async function publishAdminPracticeSet(setId: string) {
+  const { data } = await api.post<{ success: boolean; set: AdminPracticeSetRow }>(`/api/v1/admin/practice/sets/${setId}/publish`);
+  return data;
+}
+
+export async function unpublishAdminPracticeSet(setId: string) {
+  const { data } = await api.post<{ success: boolean; set: AdminPracticeSetRow }>(`/api/v1/admin/practice/sets/${setId}/unpublish`);
+  return data;
+}
+
+export async function previewAdminPracticeSet(setId: string) {
+  const { data } = await api.post<{ success: boolean; attempt: PracticeAttempt }>(`/api/v1/admin/practice/sets/${setId}/preview`);
+  return data;
+}
+
+export async function listAdminPracticeQuestions(setId: string) {
+  const { data } = await api.get<{ success: boolean; questions: Array<Record<string, unknown>> }>(
+    `/api/v1/admin/practice/sets/${setId}/questions`
+  );
+  return data;
+}
+
+export async function createAdminPracticeQuestion(setId: string, body: Record<string, unknown>) {
+  const { data } = await api.post<{ success: boolean; question: Record<string, unknown>; totalQuestions?: number; totalMarks?: number }>(
+    `/api/v1/admin/practice/sets/${setId}/questions`,
+    body
+  );
+  return data;
+}
+
+export async function updateAdminPracticeQuestion(setId: string, questionId: string, body: Record<string, unknown>) {
+  const { data } = await api.patch<{ success: boolean; question: Record<string, unknown>; totalQuestions?: number; totalMarks?: number }>(
+    `/api/v1/admin/practice/sets/${setId}/questions/${questionId}`,
+    body
+  );
+  return data;
+}
+
+export async function deleteAdminPracticeQuestion(setId: string, questionId: string) {
+  const { data } = await api.delete<{ success: boolean; deleted: boolean }>(
+    `/api/v1/admin/practice/sets/${setId}/questions/${questionId}`
+  );
+  return data;
+}
+
+export async function duplicateAdminPracticeQuestion(setId: string, questionId: string) {
+  const { data } = await api.post<{ success: boolean; question: Record<string, unknown> }>(
+    `/api/v1/admin/practice/sets/${setId}/questions/${questionId}/duplicate`
+  );
+  return data;
 }
 
 /**

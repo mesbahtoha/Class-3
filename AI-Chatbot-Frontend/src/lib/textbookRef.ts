@@ -9,7 +9,7 @@ export interface TextbookRef {
   page?: string;
   activity?: string;
   label: string;
-  isMatchRequests: boolean;
+  exercise: boolean;
 }
 
 function norm(q: string): string {
@@ -30,11 +30,11 @@ export function parseTextbookRef(question: string): TextbookRef | null {
   if (page) parts.push(`Page ${page}`);
   if (activity) parts.push(`Activity ${activity}`);
   const hasMatchWord = /\bmatch\b/.test(q) && /\brequest\b/.test(q);
-  const isMatchRequests =
+  const exercise =
     (unit === '3' && lesson === '5') ||
     (hasMatchWord && (unit === '3' || lesson === '5' || page === '45')) ||
     (q.includes('could you please call me') || q.includes('can you repeat that'));
-  return { unit, lesson, page, activity, label: parts.join(', '), isMatchRequests };
+  return { unit, lesson, page, activity, label: parts.join(', '), exercise };
 }
 
 export function isTextbookRefQuery(question: string): boolean {
@@ -50,5 +50,3 @@ export function isTextbookRefQuery(question: string): boolean {
   return hits >= 2 || (/\bmatch\b/.test(q) && /\brequest\b/.test(q));
 }
 
-export const MATCH_REQUESTS_PATH = '/exercise/match-requests';
-export const MATCH_REQUESTS_LABEL = 'Unit 3, Lesson 5, Page 45, Activity C';

@@ -1,4 +1,4 @@
-import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel, BookModel, BookChunkModel, IngestionJobModel } from '../database/models';
+import { ChatLogModel, ChunkModel, ConversationModel, MessageModel, NoticeModel, RefreshTokenModel, AIUsageModel, BookModel, BookChunkModel, IngestionJobModel, PracticeQuestionSetModel, PracticeQuestionModel, PracticeAttemptModel } from '../database/models';
 
 /**
  * Central index creation. Idempotent - safe to run on every boot.
@@ -54,6 +54,21 @@ export async function ensureIndexes(): Promise<void> {
     BookChunkModel.collection.createIndex({ bookId: 1, chunkIndex: 1 }),
     BookChunkModel.collection.createIndex({ bookTitle: 'text', text: 'text', chapterTitle: 'text' }),
     IngestionJobModel.collection.createIndex({ bookId: 1, createdAt: -1 })
+  );
+
+  // Practice & examination
+  tasks.push(
+    PracticeQuestionSetModel.collection.createIndex({
+      publicationState: 1,
+      bookId: 1,
+      questionType: 1,
+    }),
+    PracticeQuestionSetModel.collection.createIndex({ publicationState: 1, 'chapters.id': 1 }),
+    PracticeQuestionModel.collection.createIndex({ setId: 1, order: 1 }),
+    PracticeQuestionModel.collection.createIndex({ setId: 1, chapterId: 1 }),
+    PracticeAttemptModel.collection.createIndex({ userId: 1, createdAt: -1 }),
+    PracticeAttemptModel.collection.createIndex({ setId: 1, status: 1 }),
+    PracticeAttemptModel.collection.createIndex({ status: 1, expiresAt: 1 })
   );
 
   await Promise.allSettled(tasks);

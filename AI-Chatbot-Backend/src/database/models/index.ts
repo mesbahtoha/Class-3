@@ -13,3 +13,9 @@ export { ChatLogModel, ChatLogDocument, FeedbackModel } from './ChatLog.model';
 export { BookModel, BookDocument } from './Book.model';
 export { BookChunkModel, BookChunkDocument } from './BookChunk.model';
 export { IngestionJobModel, IngestionJobDocument } from './IngestionJob.model';
+export {
+  PracticeQuestionSetModel,
+  PracticeQuestionSetDocument,
+} from './PracticeQuestionSet.model';
+export { PracticeQuestionModel, PracticeQuestionDocument } from './PracticeQuestion.model';
+export { PracticeAttemptModel, PracticeAttemptDocument } from './PracticeAttempt.model';

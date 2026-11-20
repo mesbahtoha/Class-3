@@ -6,6 +6,7 @@ import adminRoutes from '../app/modules/admin/admin.routes';
 import attachmentRoutes from '../app/modules/attachment/attachment.routes';
 import booksRoutes from '../app/modules/books/books.routes';
 import tutorRoutes from '../app/modules/tutor/tutor.routes';
+import practiceRoutes from '../app/modules/practice/practice.routes';
 
 /**
  * Versioned API router (/api/v1).
@@ -19,6 +20,7 @@ v1Router.use('/admin', adminRoutes);
 v1Router.use('/attachments', attachmentRoutes);
 v1Router.use('/books', booksRoutes);
 v1Router.use('/tutor', tutorRoutes);
+v1Router.use('/practice', practiceRoutes);
 
 v1Router.get('/health', (_req, res) => {
   res.json({ success: true, status: 'ok', time: new Date().toISOString() });

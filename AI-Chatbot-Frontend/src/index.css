@@ -2095,7 +2095,7 @@ body.drawer-open {
 /* ============================================================
    Playful Geometric Design System (global, single source of truth)
    Used by every kid facing page: landing, tutor, books, practice,
-   welcome, learn. MatchRequestsPage keeps only game board styles.
+   welcome, learn.
    Tokens: cream paper, slate ink, violet accent, pink, yellow, mint.
    No em dashes or en dashes in UI copy. Use commas and periods.
    ============================================================ */

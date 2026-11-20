@@ -12,6 +12,7 @@ html[data-theme='dark'] .brand-badge{border-color:#e2e8f0;box-shadow:3px 3px 0 #
 .tl-pill-btn,.tl-icon-btn{display:inline-flex;align-items:center;gap:6px;border:2px solid #1E293B;background:#fff;color:#1E293B;border-radius:999px;cursor:pointer;font-weight:700;font-size:13px;padding:7px 12px;box-shadow:2px 2px 0 #1E293B;transition:transform .2s,box-shadow .2s,background .2s}
 .tl-icon-btn{padding:7px 9px}
 .tl-pill-btn:hover,.tl-icon-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #1E293B;background:#FBBF24}
+html[data-theme='dark'] .tl-pill-btn:hover,html[data-theme='dark'] .tl-icon-btn:hover{background:#e2e8f0;color:#1e2a45;box-shadow:3px 3px 0 #475569;transform:translate(-1px,-1px)}
 .tl-lang-text{font-size:13px}
 html[data-theme='dark'] .tl-pill-btn,html[data-theme='dark'] .tl-icon-btn{background:#1e2a45;color:#e2e8f0;border-color:#475569;box-shadow:2px 2px 0 #475569}
 .profile-wrap{position:relative}
@@ -40,6 +41,10 @@ html[data-theme='dark'] .site-footer h4{color:#e2e8f0}
 .footer-small{font-size:12px}
 .footer-bottom{text-align:center;font-size:12.5px;padding:12px 16px 18px;border-top:1px solid var(--border-color)}
 .hide-sm{display:flex}
+/* Desktop navbar: hover and active states via theme tokens (readable in light and dark) */
+.public-nav-desktop .nav-link-active{background:var(--text-primary);color:var(--bg-body)}
+.public-nav-desktop .nav-link-active:hover{background:var(--text-primary);color:var(--bg-body)}
+.public-nav-desktop a:not(.nav-link-active):hover{background:var(--bg-hover);color:var(--text-primary)}
 .landing-hero{position:relative;overflow:hidden;padding:56px 0 48px;max-height:68vh;min-height:440px;display:flex;align-items:center}
 .hero-decor{position:absolute;inset:0;opacity:.55}
 .hero-grid{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:30px;align-items:center;width:100%}

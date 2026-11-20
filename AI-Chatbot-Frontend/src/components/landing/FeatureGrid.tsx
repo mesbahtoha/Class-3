@@ -23,7 +23,7 @@ const FEATURES: Feature[] = [
   },
   {
     icon: FaComments,
-    title: 'Matching game included',
+    title: 'Practice sets included',
     description: 'Tap a request, tap a reply, earn stars. Built for the Page 45 request matching task.',
     color: '#FBBF24',
   },

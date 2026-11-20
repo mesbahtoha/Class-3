@@ -28,8 +28,8 @@ export function HeroSection() {
               </span>
               Start learning
             </button>
-            <button className="pg-btn-secondary" onClick={() => navigate('/exercise/match-requests')}>
-              Play matching game
+            <button className="pg-btn-secondary" onClick={() => navigate('/practice')}>
+              Practice &amp; exam
             </button>
           </div>
           <ul style={{ display: 'flex', gap: 8, flexWrap: 'wrap', listStyle: 'none', padding: 0, margin: 0 }}>

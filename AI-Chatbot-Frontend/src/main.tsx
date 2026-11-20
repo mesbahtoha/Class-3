@@ -7,6 +7,7 @@ import { initTheme } from '@/lib/theme';
 import { LanguageProvider } from '@/lib/i18n';
 import './index.css';
 import './styles/polish.css';
+import './styles/practice.css';
 
 initTheme();
 

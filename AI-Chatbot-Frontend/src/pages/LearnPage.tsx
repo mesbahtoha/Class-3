@@ -70,7 +70,7 @@ export function LearnPage() {
           <Link to="/tutor" className="pg-btn-secondary" style={{ textDecoration: 'none' }}>Back to tutor</Link>
         </p>
         <p style={{ marginTop: 12 }}>
-          <Link to="/exercise/match-requests" className="pg-btn-candy" style={{ textDecoration: 'none' }}>Play Match the Requests</Link>
+          <Link to="/practice" className="pg-btn-candy" style={{ textDecoration: 'none' }}>Practice this chapter</Link>
         </p>
       </div>
     </div>

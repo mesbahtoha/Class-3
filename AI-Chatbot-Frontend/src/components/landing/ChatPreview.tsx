@@ -24,9 +24,9 @@ export function ChatPreview() {
             </span>
             <strong>Shikhi Bondhu is online</strong>
           </div>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Short Unit Lesson Page text is enough. No photo needed. Tap below to try the real game.</p>
-          <button className="pg-btn-candy" onClick={() => navigate('/exercise/match-requests')} style={{ width: '100%' }}>
-            Open matching game
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Short Unit Lesson Page text is enough. No photo needed. Tap below to start a practice set.</p>
+          <button className="pg-btn-candy" onClick={() => navigate('/practice')} style={{ width: '100%' }}>
+            Start practicing
           </button>
         </div>
       </div>

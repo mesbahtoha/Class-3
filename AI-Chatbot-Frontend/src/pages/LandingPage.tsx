@@ -48,7 +48,7 @@ export function LandingPage() {
   ] : [
     { icon: MdMenuBook, c: '#8B5CF6', t: 'Understands Unit Lesson Page', d: 'Short text finds the exact match and solves it.' },
     { icon: MdQuiz, c: '#0D9488', t: 'Simple Class 3 words', d: 'Short sentences, Bangla meaning, 1 practice at end.' },
-    { icon: MdStar, c: '#D97706', t: 'Matching game included', d: 'Tap a request, tap a reply, earn stars.' },
+    { icon: MdStar, c: '#D97706', t: 'Practice sets included', d: 'Small tests made from your own book chapters.' },
     { icon: MdGroups, c: '#7C3AED', t: 'Safe and book based', d: 'Close to English For Today, kind on mistakes.' },
   ];
 
@@ -107,8 +107,8 @@ export function LandingPage() {
                 <span className="cta-dot"><MdArrowForward size={17} /></span>
                 {t('action.startLearning')}
               </button>
-              <button className="pg-btn-secondary" onClick={() => navigate('/exercise/match-requests')}>
-                {t('action.playGame')}
+              <button className="pg-btn-secondary" onClick={() => navigate('/practice')}>
+                Start practicing
               </button>
             </div>
             <ul className="hero-badges">
@@ -183,8 +183,8 @@ export function LandingPage() {
           <div className="pg-card preview-card preview-cta">
             <Mascot size={56} />
             <strong>{bn ? 'শিখি বন্ধু অনলাইন' : 'Shikhi Bondhu is online'}</strong>
-            <p className="muted">{bn ? 'ছোট লেখাই যথেষ্ট। নিচে ট্যাপ করে আসল খেলা খেলো।' : 'Short text is enough. Tap below to play the real game.'}</p>
-            <button className="pg-btn-candy full" onClick={() => navigate('/exercise/match-requests')}>{bn ? 'মিল খেলা খোলো' : 'Open matching game'}</button>
+            <p className="muted">{bn ? 'ছোট লেখাই যথেষ্ট। নিচে ট্যাপ করে আসল অনুশীলন শুরু করো।' : 'Short text is enough. Tap below to start your practice set.'}</p>
+            <button className="pg-btn-candy full" onClick={() => navigate('/practice')}>{bn ? 'অনুশীলন শুরু করো' : 'Start practicing'}</button>
           </div>
         </div>
       </section>

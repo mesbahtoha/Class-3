@@ -23,7 +23,7 @@ const BooksPage = lazy(() => import('@/pages/BooksPage').then((m) => ({ default:
 const BookDetailPage = lazy(() => import('@/pages/BookDetailPage').then((m) => ({ default: m.BookDetailPage })));
 const LearnPage = lazy(() => import('@/pages/LearnPage').then((m) => ({ default: m.LearnPage })));
 const PracticePage = lazy(() => import('@/pages/PracticePage').then((m) => ({ default: m.PracticePage })));
-const MatchRequestsPage = lazy(() => import('@/pages/exercises/MatchRequestsPage').then((m) => ({ default: m.MatchRequestsPage })));
+const PracticeAttemptPage = lazy(() => import('@/pages/PracticeAttemptPage').then((m) => ({ default: m.PracticeAttemptPage })));
 const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })));
 const ContactPage = lazy(() => import('@/pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const HelpPage = lazy(() => import('@/pages/HelpPage').then((m) => ({ default: m.HelpPage })));
@@ -40,6 +40,7 @@ const AdminSettings = lazy(() => import('@/pages/admin/Settings').then((m) => ({
 const AdminPromptTemplates = lazy(() => import('@/pages/admin/PromptTemplates').then((m) => ({ default: m.AdminPromptTemplates })));
 const AdminLogs = lazy(() => import('@/pages/admin/Logs').then((m) => ({ default: m.AdminLogs })));
 const AdminSystem = lazy(() => import('@/pages/admin/System').then((m) => ({ default: m.AdminSystem })));
+const AdminPractice = lazy(() => import('@/pages/admin/Practice').then((m) => ({ default: m.PracticeAdminPage })));
 
 const PageLoader = () => <FullPageSpinner label="Loading…" />;
 
@@ -81,7 +82,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/exercise/match-requests" element={<MatchRequestsPage />} />
+
           <Route element={<PublicOnlyRoute />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
@@ -95,6 +96,7 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/chat/:id" element={<ChatPage />} />
+            <Route path="/practice/attempt/:attemptId" element={<PracticeAttemptPage />} />
           </Route>
         </Route>
 
@@ -103,6 +105,7 @@ export default function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/books" element={<AdminBooks />} />
+            <Route path="/admin/practice" element={<AdminPractice />} />
             <Route path="/admin/ai-settings" element={<AdminAISettings />} />
             <Route path="/admin/notices" element={<AdminNotices />} />
             <Route path="/admin/chats" element={<AdminChats />} />

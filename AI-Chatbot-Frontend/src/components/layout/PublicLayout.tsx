@@ -36,9 +36,9 @@ export function PublicLayout() {
   const linkStyle = ({ isActive }: { isActive: boolean }) => ({
     padding: '8px 13px', borderRadius: 999, fontWeight: 700 as const, fontSize: 13.5,
     color: isActive ? 'var(--bg-body)' : 'var(--text-primary)',
-    background: isActive ? 'var(--text-primary)' : 'transparent',
     textDecoration: 'none' as const,
   });
+  const linkClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav-link-active' : undefined);
 
   return (
     <div className="pg-app flex flex-col" style={{ minHeight: '100vh' }}>
@@ -49,14 +49,14 @@ export function PublicLayout() {
         </Link>
 
         <nav className="public-nav-desktop" aria-label="Primary">
-          <NavLink to="/" style={linkStyle} end>{t('nav.home')}</NavLink>
-          <NavLink to="/tutor" style={linkStyle}>{t('nav.tutor')}</NavLink>
-          <NavLink to="/practice" style={linkStyle}>{t('nav.practice')}</NavLink>
-          <NavLink to="/books" style={linkStyle}>{t('nav.books')}</NavLink>
-          <NavLink to="/about" style={linkStyle}>{t('nav.about')}</NavLink>
-          <NavLink to="/contact" style={linkStyle}>{t('nav.contact')}</NavLink>
-          {authed && <NavLink to="/chat" style={linkStyle}>{t('nav.chat')}</NavLink>}
-          {authed && user?.role === 'admin' && <NavLink to="/admin" style={linkStyle}>{t('nav.dashboard')}</NavLink>}
+          <NavLink to="/" style={linkStyle} className={linkClass} end>{t('nav.home')}</NavLink>
+          <NavLink to="/tutor" style={linkStyle} className={linkClass}>{t('nav.tutor')}</NavLink>
+          <NavLink to="/practice" style={linkStyle} className={linkClass}>{t('nav.practice')}</NavLink>
+          <NavLink to="/books" style={linkStyle} className={linkClass}>{t('nav.books')}</NavLink>
+          <NavLink to="/about" style={linkStyle} className={linkClass}>{t('nav.about')}</NavLink>
+          <NavLink to="/contact" style={linkStyle} className={linkClass}>{t('nav.contact')}</NavLink>
+          {authed && <NavLink to="/chat" style={linkStyle} className={linkClass}>{t('nav.chat')}</NavLink>}
+          {authed && user?.role === 'admin' && <NavLink to="/admin" style={linkStyle} className={linkClass}>{t('nav.dashboard')}</NavLink>}
         </nav>
 
         <div className="public-header-actions">
@@ -105,7 +105,6 @@ export function PublicLayout() {
           <Link to="/tutor" className="nav-link" onClick={close}>{t('nav.tutor')}</Link>
           <Link to="/practice" className="nav-link" onClick={close}>{t('nav.practice')}</Link>
           <Link to="/books" className="nav-link" onClick={close}>{t('nav.books')}</Link>
-          <Link to="/exercise/match-requests" className="nav-link" onClick={close}>{t('nav.game')}</Link>
           <Link to="/about" className="nav-link" onClick={close}>{t('nav.about')}</Link>
           <Link to="/contact" className="nav-link" onClick={close}>{t('nav.contact')}</Link>
           <Link to="/help" className="nav-link" onClick={close}>{t('nav.help')}</Link>
@@ -151,7 +150,6 @@ export function PublicLayout() {
             <Link to="/tutor">{t('nav.tutor')}</Link>
             <Link to="/practice">{t('nav.practice')}</Link>
             <Link to="/books">{t('nav.books')}</Link>
-            <Link to="/exercise/match-requests">{t('nav.game')}</Link>
           </div>
           <div>
             <h4>{t('footer.support')}</h4>

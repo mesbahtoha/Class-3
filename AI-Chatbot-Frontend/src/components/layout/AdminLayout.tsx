@@ -13,6 +13,7 @@ import {
   MdMemory,
   MdMenu,
   MdClose,
+  MdSchool,
 } from 'react-icons/md';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth.store';
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: MdDashboard, end: true },
   { to: '/admin/users', label: 'Users', icon: MdPeople },
   { to: '/admin/books', label: 'Books (Class 3)', icon: MdStickyNote2 },
+  { to: '/admin/practice', label: 'Practice & Exams', icon: MdSchool },
   { to: '/admin/ai-settings', label: 'AI Providers', icon: MdMemory },
   { to: '/admin/notices', label: 'Notices (legacy)', icon: MdStickyNote2 },
   { to: '/admin/chats', label: 'Chat History', icon: MdMessage },
