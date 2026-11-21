@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Field, Input, Select, Textarea } from '@/components/ui/Form';
 import { Modal } from '@/components/ui/Modal';
 import {
@@ -317,27 +318,52 @@ export function PracticeQuestionBuilder({ open, onClose, onSaved, set, existingQ
               <Textarea rows={2} value={state.question} onChange={(e) => update({ question: e.target.value })} />
             </Field>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {state.options.map((option, index) => (
-                <div key={index} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    type="radio"
-                    name="correct-option"
-                    checked={state.correctIndex === index}
-                    onChange={() => update({ correctIndex: index })}
-                    aria-label={`Option ${index + 1} is correct`}
-                  />
-                  <Input
-                    value={option}
-                    placeholder={`Option ${index + 1}`}
-                    onChange={(e) => {
-                      const next = [...state.options];
-                      next[index] = e.target.value;
-                      update({ options: next });
+              {state.options.map((option, index) => {
+                const selected = state.correctIndex === index;
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      gap: 10,
+                      alignItems: 'center',
+                      padding: '8px 10px',
+                      borderRadius: 12,
+                      border: `1.5px solid ${selected ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                      background: selected ? 'var(--color-primary-soft)' : 'var(--bg-surface)',
+                      transition: 'border-color 0.15s ease, background 0.15s ease',
                     }}
-                  />
-                  <Button variant="secondary" onClick={() => removeOption(index)} disabled={state.options.length <= 2}>Remove</Button>
-                </div>
-              ))}
+                  >
+                    <label
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}
+                      title="Mark this option as the correct answer"
+                    >
+                      <input
+                        type="radio"
+                        name="correct-option"
+                        checked={selected}
+                        onChange={() => update({ correctIndex: index })}
+                        aria-label={`Option ${index + 1} is correct`}
+                        style={{ width: 18, height: 18, margin: 0 }}
+                      />
+                      <span className="text-muted small" style={{ whiteSpace: 'nowrap' }}>Correct</span>
+                    </label>
+                    <Input
+                      value={option}
+                      placeholder={`Option ${index + 1}`}
+                      aria-label={`Option ${index + 1}`}
+                      style={{ flex: 1, minWidth: 0 }}
+                      onChange={(e) => {
+                        const next = [...state.options];
+                        next[index] = e.target.value;
+                        update({ options: next });
+                      }}
+                    />
+                    {selected && <Badge variant="primary">Selected</Badge>}
+                    <Button variant="secondary" onClick={() => removeOption(index)} disabled={state.options.length <= 2}>Remove</Button>
+                  </div>
+                );
+              })}
               <div>
                 <Button variant="secondary" onClick={addOption} disabled={state.options.length >= 6}>Add option</Button>
                 <span className="text-muted small" style={{ marginLeft: 8 }}>Select the radio button next to the correct answer.</span>

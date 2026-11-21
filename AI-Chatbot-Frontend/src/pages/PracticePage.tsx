@@ -152,10 +152,24 @@ export function PracticePage() {
                       type="button"
                       onClick={() => setBookId(book._id)}
                       className="pg-card"
-                      style={{ textAlign: 'left', padding: 14, cursor: 'pointer', border: bookId === book._id ? '2px solid var(--accent-candy)' : '1px solid var(--border-color)' }}
+                      aria-pressed={bookId === book._id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        textAlign: 'left',
+                        padding: 14,
+                        cursor: 'pointer',
+                        border: bookId === book._id ? '2px solid var(--accent-candy)' : '1px solid var(--border-color)',
+                        background: bookId === book._id ? 'var(--surface-mint-soft)' : undefined,
+                      }}
                     >
-                      <strong>{book.title}</strong>
-                      <span style={{ marginLeft: 8, color: 'var(--text-secondary)', fontSize: 13 }}>{book.subject} · Class 3</span>
+                      <span>
+                        <strong>{book.title}</strong>
+                        <span style={{ marginLeft: 8, color: 'var(--text-secondary)', fontSize: 13 }}>{book.subject} · Class 3</span>
+                      </span>
+                      {bookId === book._id && <span className="pg-badge pg-badge-mint">✓ Selected</span>}
                     </button>
                   ))}
                 </div>
@@ -212,9 +226,13 @@ export function PracticePage() {
                     type="button"
                     onClick={() => setQuestionType(type.value)}
                     className="pg-card"
+                    aria-pressed={questionType === type.value}
                     style={{ padding: 14, cursor: 'pointer', textAlign: 'left', border: questionType === type.value ? '2px solid var(--accent-candy)' : '1px solid var(--border-color)', background: questionType === type.value ? 'var(--surface-mint-soft)' : undefined }}
                   >
-                    <strong>{type.label}</strong>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <strong>{type.label}</strong>
+                      {questionType === type.value && <span aria-hidden="true" style={{ color: 'var(--success-text)', fontWeight: 900 }}>✓</span>}
+                    </span>
                     <span style={{ display: 'block', marginTop: 4, color: 'var(--text-secondary)', fontSize: 13 }}>{type.description}</span>
                   </button>
                 ))}
@@ -234,18 +252,26 @@ export function PracticePage() {
                   type="button"
                   onClick={() => setMode('practice')}
                   className="pg-card"
+                  aria-pressed={mode === 'practice'}
                   style={{ padding: 16, cursor: 'pointer', border: mode === 'practice' ? '2px solid var(--accent-candy)' : '1px solid var(--border-color)', background: mode === 'practice' ? 'var(--surface-mint-soft)' : undefined }}
                 >
-                  <strong>Practice Mode</strong>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <strong>Practice Mode</strong>
+                    {mode === 'practice' && <span aria-hidden="true" style={{ color: 'var(--success-text)', fontWeight: 900 }}>✓</span>}
+                  </span>
                   <span style={{ display: 'block', marginTop: 6, color: 'var(--text-secondary)', fontSize: 13 }}>Answer at your own pace and get instant feedback after submitting.</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('exam')}
                   className="pg-card"
+                  aria-pressed={mode === 'exam'}
                   style={{ padding: 16, cursor: 'pointer', border: mode === 'exam' ? '2px solid var(--accent-candy)' : '1px solid var(--border-color)', background: mode === 'exam' ? 'var(--surface-pink-soft)' : undefined }}
                 >
-                  <strong>Exam Mode</strong>
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <strong>Exam Mode</strong>
+                    {mode === 'exam' && <span aria-hidden="true" style={{ color: 'var(--success-text)', fontWeight: 900 }}>✓</span>}
+                  </span>
                   <span style={{ display: 'block', marginTop: 6, color: 'var(--text-secondary)', fontSize: 13 }}>Answer all questions together and submit before the timer ends.</span>
                 </button>
               </div>

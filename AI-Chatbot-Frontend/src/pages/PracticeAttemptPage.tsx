@@ -341,6 +341,53 @@ interface AttemptQuestionCardProps {
   onCheck?: () => void;
 }
 
+function SelectableOption({
+  selected,
+  onClick,
+  children,
+  selectedBackground = 'var(--surface-mint-soft)',
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  selectedBackground?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className="pg-btn-secondary"
+      aria-pressed={selected}
+      style={{
+        justifyContent: 'flex-start',
+        gap: 10,
+        borderWidth: selected ? 2 : 1,
+        borderColor: selected ? 'var(--accent-candy)' : undefined,
+        background: selected ? selectedBackground : undefined,
+        textAlign: 'left',
+      }}
+      onClick={onClick}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 18,
+          height: 18,
+          borderRadius: '50%',
+          border: `2px solid ${selected ? 'var(--accent-candy)' : 'var(--border-strong)'}`,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {selected && <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-candy)' }} />}
+      </span>
+      <span style={{ flex: 1 }}>{children}</span>
+      {selected && <span aria-hidden="true" style={{ fontWeight: 900, color: 'var(--success-text)' }}>✓</span>}
+    </button>
+  );
+}
+
 function AttemptQuestionCard({ question, index, value, onChange, showFeedback = false, checkResult, checking = false, onCheck }: AttemptQuestionCardProps) {
   const id = `attempt-q-${question.questionId}`;
   const current = (value ?? {}) as Record<string, unknown>;
@@ -354,20 +401,13 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
       content = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {options.map((option, optionIndex) => (
-            <button
+            <SelectableOption
               key={option}
-              type="button"
-              className="pg-btn-secondary"
-              aria-pressed={selectedIndex === optionIndex}
-              style={{
-                justifyContent: 'flex-start',
-                borderColor: selectedIndex === optionIndex ? 'var(--accent-candy)' : undefined,
-                background: selectedIndex === optionIndex ? 'var(--surface-mint-soft)' : undefined,
-              }}
+              selected={selectedIndex === optionIndex}
               onClick={() => onChange({ optionIndex })}
             >
               {option}
-            </button>
+            </SelectableOption>
           ))}
         </div>
       );
@@ -400,10 +440,11 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
     }
 
     case 'true_false': {
+      const boolValue = typeof current.value === 'boolean' ? current.value : null;
       content = (
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button type="button" className="pg-btn-secondary" style={{ flex: 1 }} onClick={() => onChange({ value: true })}>True</button>
-          <button type="button" className="pg-btn-secondary" style={{ flex: 1 }} onClick={() => onChange({ value: false })}>False</button>
+        <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+          <SelectableOption selected={boolValue === true} onClick={() => onChange({ value: true })}>True</SelectableOption>
+          <SelectableOption selected={boolValue === false} onClick={() => onChange({ value: false })}>False</SelectableOption>
         </div>
       );
       break;
@@ -420,15 +461,14 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
         ? ((current as { pairs: Array<{ leftId: string; rightId: string }> }).pairs ?? [])
         : [];
       const selectedLeftId = typeof current.leftId === 'string' ? current.leftId : null;
-      const selectedRightId = typeof current.rightId === 'string' ? current.rightId : null;
 
       const setPair = (leftId: string, rightId: string) => {
         const next = pairs.filter((pair) => pair.leftId !== leftId);
         next.push({ leftId, rightId });
-        onChange({ pairs: next });
+        onChange({ ...current, pairs: next });
       };
       const removePair = (leftId: string) => {
-        onChange({ pairs: pairs.filter((pair) => pair.leftId !== leftId) });
+        onChange({ ...current, pairs: pairs.filter((pair) => pair.leftId !== leftId) });
       };
 
       content = (
@@ -439,15 +479,13 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
               <strong>Column A</strong>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                 {left.map((item) => (
-                  <button
+                  <SelectableOption
                     key={item.id}
-                    type="button"
-                    className="pg-btn-secondary"
-                    style={{ justifyContent: 'flex-start', borderColor: selectedLeftId === item.id ? 'var(--accent-candy)' : undefined, background: selectedLeftId === item.id ? 'var(--surface-mint-soft)' : undefined }}
-                    onClick={() => onChange({ leftId: item.id, rightId: null })}
+                    selected={selectedLeftId === item.id}
+                    onClick={() => onChange({ ...current, leftId: item.id, rightId: null })}
                   >
                     {item.text}
-                  </button>
+                  </SelectableOption>
                 ))}
               </div>
             </div>
@@ -455,17 +493,16 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
               <strong>Column B</strong>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                 {right.map((item) => (
-                  <button
+                  <SelectableOption
                     key={item.id}
-                    type="button"
-                    className="pg-btn-secondary"
-                    style={{ justifyContent: 'flex-start', borderColor: selectedRightId === item.id ? 'var(--accent-candy)' : undefined, background: selectedRightId === item.id ? 'var(--surface-pink-soft)' : undefined }}
+                    selected={Boolean(selectedLeftId) && pairs.some((pair) => pair.leftId === selectedLeftId && pair.rightId === item.id)}
+                    selectedBackground="var(--surface-pink-soft)"
                     onClick={() => {
                       if (selectedLeftId) setPair(selectedLeftId, item.id);
                     }}
                   >
                     {item.text}
-                  </button>
+                  </SelectableOption>
                 ))}
               </div>
             </div>
@@ -569,15 +606,13 @@ function PracticeFeedback({ result }: { result: QuestionResult }) {
           ✔ Correct! +{result.marksAwarded} of {result.marks} mark(s)
         </p>
       ) : (
-        <>
-          <p style={{ margin: 0, fontWeight: 800, color: 'var(--danger-text)' }}>
-            ✖ Not quite. +{result.marksAwarded} of {result.marks} mark(s)
-          </p>
-          <p style={{ margin: '6px 0 0' }}>
-            <strong>Correct answer:</strong> {correctText}
-          </p>
-        </>
+        <p style={{ margin: 0, fontWeight: 800, color: 'var(--danger-text)' }}>
+          ✖ Not quite. +{result.marksAwarded} of {result.marks} mark(s)
+        </p>
       )}
+      <p style={{ margin: '6px 0 0' }}>
+        <strong>Correct answer:</strong> {correctText || '—'}
+      </p>
       {result.breakdown.length > 0 && (
         <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {result.breakdown.map((item, itemIndex) => (
@@ -636,11 +671,9 @@ function AttemptResults({ attempt, answers, questions, onRetake }: AttemptResult
                 <p style={{ margin: '0 0 6px' }}>
                   <strong>Your answer:</strong> {answerText}
                 </p>
-                {!result.correct && (
-                  <p style={{ margin: 0 }}>
-                    <strong>Correct answer:</strong> {correctAnswer}
-                  </p>
-                )}
+                <p style={{ margin: 0 }}>
+                  <strong>Correct answer:</strong> {correctAnswer || '—'}
+                </p>
                 {result.breakdown.length > 0 && (
                   <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {result.breakdown.map((item, itemIndex) => (

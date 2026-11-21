@@ -239,6 +239,7 @@ export function PracticeSetEditor({ open, onClose, onSaved, initial }: SetEditor
 
   const typeLocked = Boolean(initial && (initial.totalQuestions ?? 0) > 0);
   const busy = loadingBooks || loadingChapters || saving;
+  const selectedBook = books.find((book) => book._id === form.bookId);
 
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Edit question set' : 'New question set'} maxWidth={680}>
@@ -263,6 +264,12 @@ export function PracticeSetEditor({ open, onClose, onSaved, initial }: SetEditor
         </Field>
         {!loadingBooks && books.length === 0 && (
           <p className="text-muted">{error ? 'Could not load books.' : 'No books found. Import a book first.'}</p>
+        )}
+        {selectedBook && (
+          <p className="text-muted small" style={{ marginTop: -6 }}>
+            Selected book: <strong style={{ color: 'var(--text-primary)' }}>{selectedBook.title}</strong>
+            {selectedBook.subject ? ` · ${selectedBook.subject}` : ''}
+          </p>
         )}
         <Field label="Chapters">
           {loadingChapters ? (

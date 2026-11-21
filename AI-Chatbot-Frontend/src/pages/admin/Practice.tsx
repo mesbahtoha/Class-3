@@ -60,7 +60,7 @@ function questionAnswer(question: Record<string, unknown>): string {
   if (type === 'mcq') {
     const options = Array.isArray(question.options) ? question.options.map(String) : [];
     const index = Number(question.correctIndex ?? 0);
-    return `Correct: ${options[index] ?? `option ${index + 1}`}`;
+    return options[index] ?? `Option ${index + 1}`;
   }
   if (type === 'fill_blank') {
     const blanks = Array.isArray(question.blanks) ? (question.blanks as Array<Record<string, unknown>>) : [];
@@ -71,7 +71,7 @@ function questionAnswer(question: Record<string, unknown>): string {
       })
       .join(' · ');
   }
-  if (type === 'true_false') return `Correct: ${question.correct ? 'True' : 'False'}`;
+  if (type === 'true_false') return question.correct ? 'True' : 'False';
   if (type === 'matching') {
     const pairs = Array.isArray(question.pairs) ? (question.pairs as Array<Record<string, unknown>>) : [];
     return pairs.map((pair) => `${String(pair.left ?? '')} → ${String(pair.right ?? '')}`).join(' · ');
@@ -79,11 +79,11 @@ function questionAnswer(question: Record<string, unknown>): string {
   if (type === 'one_word' || type === 'translation') {
     const alternatives = Array.isArray(question.alternatives) ? question.alternatives.map(String) : [];
     const answer = String(question.answer ?? '');
-    return `Correct: ${[answer, ...alternatives].filter(Boolean).join(' / ')}`;
+    return [answer, ...alternatives].filter(Boolean).join(' / ');
   }
   if (type === 'rearrange') {
     const items = Array.isArray(question.items) ? question.items.map(String) : [];
-    return `Correct order: ${items.join(' → ')}`;
+    return items.join(' → ');
   }
   return '';
 }
@@ -523,9 +523,18 @@ export function PracticeAdminPage() {
                         ))}
                       </ol>
                     )}
-                    {question.questionType !== 'mcq' && (
-                      <div className="text-muted small" style={{ marginTop: 6 }}>{questionAnswer(question)}</div>
-                    )}
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: '8px 10px',
+                        borderRadius: 10,
+                        background: 'var(--surface-subtle)',
+                        fontSize: 13,
+                        whiteSpace: 'normal',
+                      }}
+                    >
+                      <strong>Answer:</strong> {questionAnswer(question) || '—'}
+                    </div>
                     <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
                       <Button size="sm" variant="secondary" onClick={() => { setBuilderMode('edit'); setEditingQuestion(question); setBuilderOpen(true); }}>Edit</Button>
                       <Button size="sm" variant="secondary" onClick={() => void duplicateQuestion(question)}>Duplicate</Button>
