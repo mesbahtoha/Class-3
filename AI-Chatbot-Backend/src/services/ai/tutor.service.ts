@@ -187,7 +187,9 @@ export const tutorService = {
     const messages = buildTutorMessages({
       question,
       answerLanguage,
-      chunks,
+      // Weak matches are not shown to the model, so a labelled general answer
+      // cannot accidentally claim "the book says" from a low-confidence chunk.
+      chunks: sufficient ? chunks : [],
       history,
       bookFilterLabel: input.subject ? `Subject: ${input.subject}` : undefined,
       attachmentsText: attachmentBlocks.join('\n\n') || undefined,

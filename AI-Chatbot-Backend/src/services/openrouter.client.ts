@@ -8,6 +8,8 @@ export interface ChatMessageInput {
 }
 
 export interface OpenRouterRequestOptions {
+  /** Explicit key bypasses admin settings (used by offline jobs such as OCR). */
+  apiKey?: string;
   model?: string;
   temperature?: number;
   maxTokens?: number;
@@ -20,6 +22,8 @@ export interface OpenRouterUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  /** Provider-reported cost in USD when available. */
+  cost?: number;
 }
 
 export interface OpenRouterStreamChunk {
@@ -36,20 +40,15 @@ export interface OpenRouterStreamChunk {
  * - Both non-streaming completions and SSE streaming are supported.
  */
 export class OpenRouterClient {
-  private static async resolveApiKey(): Promise<string> {
-    const aiSettings = await settingsService.getAISettings();
-    return aiSettings.openRouterApiKey || env.openRouter.apiKey;
-  }
-
   /** Non-streaming completion. Returns the full text content. */
   static async complete(
     messages: ChatMessageInput[],
     options: OpenRouterRequestOptions = {}
   ): Promise<{ text: string; usage: OpenRouterUsage }> {
-    const apiKey = await this.resolveApiKey();
+    const aiSettings = options.apiKey ? null : await settingsService.getAISettings();
+    const apiKey = options.apiKey || aiSettings?.openRouterApiKey || env.openRouter.apiKey;
     if (!apiKey) throw new Error('OpenRouter API key is not configured');
 
-    const aiSettings = await settingsService.getAISettings();
     const response = await fetch(`${env.openRouter.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -59,10 +58,10 @@ export class OpenRouterClient {
         'X-OpenRouter-Title': env.appTitle,
       },
       body: JSON.stringify({
-        model: options.model || aiSettings.model || env.openRouter.model,
+        model: options.model || aiSettings?.model || env.openRouter.model,
         messages,
-        temperature: options.temperature ?? aiSettings.temperature ?? 0.15,
-        max_tokens: options.maxTokens || aiSettings.maxTokens || env.openRouter.maxTokens,
+        temperature: options.temperature ?? aiSettings?.temperature ?? 0.15,
+        max_tokens: options.maxTokens || aiSettings?.maxTokens || env.openRouter.maxTokens,
         ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
       }),
       signal: options.signal,
@@ -72,7 +71,7 @@ export class OpenRouterClient {
       error?: { message?: string };
       message?: string;
       choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number };
     } | null;
 
     if (!response.ok) {
@@ -97,10 +96,9 @@ export class OpenRouterClient {
     messages: ChatMessageInput[],
     options: OpenRouterRequestOptions = {}
   ): AsyncGenerator<OpenRouterStreamChunk, void, void> {
-    const apiKey = await this.resolveApiKey();
+    const aiSettings = options.apiKey ? null : await settingsService.getAISettings();
+    const apiKey = options.apiKey || aiSettings?.openRouterApiKey || env.openRouter.apiKey;
     if (!apiKey) throw new Error('OpenRouter API key is not configured');
-
-    const aiSettings = await settingsService.getAISettings();
 
     const controller = new AbortController();
     const externalSignal = options.signal;
@@ -118,10 +116,10 @@ export class OpenRouterClient {
         'X-OpenRouter-Title': env.appTitle,
       },
       body: JSON.stringify({
-        model: options.model || aiSettings.model || env.openRouter.model,
+        model: options.model || aiSettings?.model || env.openRouter.model,
         messages,
-        temperature: options.temperature ?? aiSettings.temperature ?? 0.15,
-        max_tokens: options.maxTokens || aiSettings.maxTokens || env.openRouter.maxTokens,
+        temperature: options.temperature ?? aiSettings?.temperature ?? 0.15,
+        max_tokens: options.maxTokens || aiSettings?.maxTokens || env.openRouter.maxTokens,
         stream: true,
         ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
       }),
@@ -244,13 +242,14 @@ function extractCompletionText(json: {
 }
 
 function normalizeUsage(json: {
-  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+  usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; cost?: number };
 }): OpenRouterUsage {
   const usage = json.usage || {};
   return {
     promptTokens: usage.prompt_tokens || 0,
     completionTokens: usage.completion_tokens || 0,
     totalTokens: usage.total_tokens || 0,
+    ...(typeof usage.cost === 'number' ? { cost: usage.cost } : {}),
   };
 }
 

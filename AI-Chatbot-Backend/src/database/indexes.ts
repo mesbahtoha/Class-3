@@ -52,6 +52,8 @@ export async function ensureIndexes(): Promise<void> {
     BookModel.collection.createIndex({ publicationState: 1, subject: 1 }),
     BookModel.collection.createIndex({ title: 'text', subject: 'text' }),
     BookChunkModel.collection.createIndex({ bookId: 1, chunkIndex: 1 }),
+    BookChunkModel.collection.createIndex({ bookId: 1, searchTerms: 1 }),
+    BookChunkModel.collection.createIndex({ bookId: 1, pageType: 1 }),
     BookChunkModel.collection.createIndex({ bookTitle: 'text', text: 'text', chapterTitle: 'text' }),
     IngestionJobModel.collection.createIndex({ bookId: 1, createdAt: -1 })
   );

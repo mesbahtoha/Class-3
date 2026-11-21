@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { AppShell } from '@/components/layout/AppShell';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -50,6 +51,7 @@ export default function App() {
   const initialize = useAuthStore((s) => s.initialize);
   const logout = useAuthStore((s) => s.logout);
   const resetChat = useChatStore((s) => s.reset);
+  const location = useLocation();
 
   useEffect(() => {
     void initialize();
@@ -69,6 +71,7 @@ export default function App() {
   }, [resetChat]);
 
   return (
+    <ErrorBoundary key={location.pathname}>
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route element={<PublicLayout />}>
@@ -125,5 +128,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+    </ErrorBoundary>
   );
 }

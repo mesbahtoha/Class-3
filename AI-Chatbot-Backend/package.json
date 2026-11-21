@@ -12,6 +12,9 @@
     "ingest:pdfs": "tsx scripts/ingest-pdfs.ts",
     "test:tutor": "tsx tests/run.ts",
     "test:practice": "tsx tests/practice.ts",
+    "test:practice-api": "tsx tests/practice-api.ts",
+    "db:remove-demo-practice": "tsx scripts/remove-demo-practice-data.ts",
+    "db:fix-chunks": "tsx scripts/fix-corrupt-chunks.ts",
     "test:docs": "tsx tests/docs.ts",
     "vercel-build": "npm run build"
   },
@@ -30,6 +33,7 @@
     "node": ">=18.17.0"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.80",
     "@types/cookie-parser": "^1.4.10",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.5",
@@ -46,6 +50,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^6.4.299",
+    "tesseract.js": "^6.0.1",
     "tsx": "^4.19.2",
     "winston": "^3.17.0",
     "zod": "^3.24.1"

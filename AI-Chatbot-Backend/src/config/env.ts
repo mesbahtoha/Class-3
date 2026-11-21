@@ -28,12 +28,22 @@ const env = {
     maxTokens: Number(process.env.OPENROUTER_MAX_TOKENS || 700),
   },
 
+  ocr: {
+    provider: (process.env.OCR_PROVIDER || 'hybrid') as 'tesseract' | 'vision' | 'hybrid',
+    visionModel: process.env.OCR_VISION_MODEL || 'google/gemini-2.5-flash',
+    visionThreshold: Number(process.env.OCR_VISION_THRESHOLD || 62),
+    concurrency: Math.max(1, Math.min(4, Number(process.env.OCR_CONCURRENCY || 3))),
+    scale: Number(process.env.OCR_SCALE || 3),
+    maxTokens: Math.max(400, Math.min(4000, Number(process.env.OCR_MAX_TOKENS || 1800))),
+    cacheRoot: process.env.OCR_CACHE_DIR || path.join(process.cwd(), '.cache', 'ocr'),
+  },
+
   tutor: {
     provider: process.env.AI_PROVIDER || 'openrouter',
     model: process.env.AI_MODEL || process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash-lite',
     timeoutMs: Number(process.env.AI_TIMEOUT_MS || 45000),
     guestPerMin: Number(process.env.GUEST_CHAT_PER_MIN || 10),
-    uploadMaxMb: Number(process.env.BOOK_UPLOAD_MAX_MB || 30),
+    uploadMaxMb: Number(process.env.BOOK_UPLOAD_MAX_MB || 60),
   },
 
   jwt: {

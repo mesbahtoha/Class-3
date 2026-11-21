@@ -19,15 +19,6 @@ const QUESTION_TYPES: Array<{ value: PracticeQuestionType; label: string; descri
 
 const STEPS = ['Book', 'Chapter', 'Question type', 'Mode'];
 
-/** Demo MCQ questions shown at the top of the page "for showing" the MCQ type. */
-const DEMO_MCQS: Array<{ question: string; options: string[]; correctIndex: number }> = [
-  { question: 'What is 2 + 3?', options: ['4', '5', '6'], correctIndex: 1 },
-  { question: 'How many legs does a dog have?', options: ['2', '4', '6'], correctIndex: 1 },
-  { question: 'Which one is a fruit?', options: ['Banana', 'Car', 'Pencil'], correctIndex: 0 },
-  { question: 'What comes next: 1, 2, 3, 4, …', options: ['5', '6', '7'], correctIndex: 0 },
-  { question: 'Sun rises in the east or the west?', options: ['East', 'West', 'North'], correctIndex: 0 },
-];
-
 export function PracticePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -123,7 +114,6 @@ export function PracticePage() {
         <span className="pg-badge pg-badge-mint" style={{ marginBottom: 10, display: 'inline-flex' }}>Practice &amp; Exam</span>
         <h1 style={{ fontSize: 32, marginBottom: 6 }}>Practice time</h1>
         <p style={{ color: 'var(--text-secondary)', marginBottom: 18 }}>Small questions, instant cheers. Choose your book, chapters and question type.</p>
-        <DemoMCQsSection />
         <ol style={{ display: 'flex', gap: 8, listStyle: 'none', padding: 0, margin: '0 0 18px', flexWrap: 'wrap' }}>
           {STEPS.map((title, index) => (
             <li key={title} className="flex items-center gap-2">
@@ -282,35 +272,6 @@ export function PracticePage() {
           <Link to="/tutor" className="pg-btn-secondary" style={{ textDecoration: 'none' }}>Back to tutor</Link>
         </div>
       </div>
-    </div>
-  );
-}
-
-/** Shows demo MCQ questions at the top of /practice so the system can be shown to students. */
-function DemoMCQsSection() {
-  return (
-    <div className="pg-card pg-card-yellow-shadow" style={{ padding: 16, marginBottom: 14, background: 'var(--surface-warn)' }}>
-      <h2 style={{ marginTop: 0 }}>Demo MCQs (showing)</h2>
-      <p className="text-muted" style={{ margin: '0 0 10px', fontSize: 13 }}>
-        Example questions to show how the MCQ practice looks. Pick a book below to start a real session.
-      </p>
-      {DEMO_MCQS.map((demo, index) => (
-        <div key={demo.question} style={{ marginTop: 12, paddingTop: 12, borderTop: index === 0 ? 'none' : '1px solid var(--border-color)' }}>
-          <div style={{ fontWeight: 700 }}>{index + 1}. {demo.question}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
-            {demo.options.map((option, optionIndex) => (
-              <div key={option} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
-                {optionIndex === demo.correctIndex ? (
-                  <span style={{ color: 'var(--color-success)', fontWeight: 800 }}>✔</span>
-                ) : (
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 800, minWidth: 16 }}>—</span>
-                )}
-                {option}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

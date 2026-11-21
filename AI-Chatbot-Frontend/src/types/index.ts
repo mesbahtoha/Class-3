@@ -220,6 +220,9 @@ export interface BookInfo {
   grade: string;
   curriculum: string;
   language: string;
+  /** Language actually used for OCR; `language` may be 'en' when Atlas rejects
+   * the Bengali text-index collation even though the book is Bengali. */
+  ocrLanguage?: string;
   edition?: string;
   publisher?: string;
   chunkCount?: number;

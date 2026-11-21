@@ -1,6 +1,6 @@
 import { createApp } from './app';
 import env from './config/env';
-import { connectDatabase, disconnectDatabase } from './config/db';
+import { connectDatabase, disconnectDatabase, runBootJobs } from './config/db';
 import { log } from './config/logger';
 
 /**
@@ -25,6 +25,9 @@ async function startServer(): Promise<void> {
 
     const server = app.listen(env.port, '0.0.0.0', () => {
       log.info(`Server running on port ${env.port} (${env.nodeEnv})`);
+      // Detached and time-bounded: creates indexes and seeds defaults without
+      // delaying the first request (important on serverless cold starts).
+      runBootJobs();
     });
 
     // Graceful shutdown

@@ -36,6 +36,14 @@ const bookSchema = new Schema(
       index: true,
     },
     chunkCount: { type: Number, default: 0 },
+    ocrPageCount: { type: Number, default: 0 },
+    textPageCount: { type: Number, default: 0 },
+    ocrModel: { type: String, default: '' },
+    /** Language used for OCR. Kept separate because Atlas can reject the
+     * `bn` collation on text-indexed collections even when the book is Bengali. */
+    ocrLanguage: { type: String, enum: ['bn', 'en'], default: 'bn' },
+    ocrScale: { type: Number, default: 0 },
+    ingestedAt: { type: Date, default: null },
     version: { type: Number, default: 1 },
     replacesBookId: { type: Schema.Types.ObjectId, ref: 'Book', default: null },
     uploadedBy: { type: String, default: 'admin' },

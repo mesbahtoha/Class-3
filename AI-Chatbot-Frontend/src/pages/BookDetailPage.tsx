@@ -5,6 +5,13 @@ import { useTutorStore } from '@/store/tutor.store';
 import { useLang } from '@/lib/i18n';
 import type { BookInfo } from '@/types';
 
+function languageLabel(book: BookInfo, bn: boolean): string {
+  const code = book.ocrLanguage || book.language;
+  if (code === 'bn') return bn ? 'বাংলা' : 'Bengali';
+  if (code === 'en') return 'English';
+  return code || (bn ? 'বাংলা/ইংরেজি' : 'bn/en');
+}
+
 export function BookDetailPage() {
   const { bookId } = useParams<{ bookId: string }>();
   const navigate = useNavigate();
@@ -50,7 +57,7 @@ export function BookDetailPage() {
               [bn ? 'বিষয়' : 'Subject', book.subject],
               [bn ? 'শ্রেণি' : 'Grade', book.grade],
               [bn ? 'কারিকুলাম' : 'Curriculum', book.curriculum],
-              [bn ? 'ভাষা' : 'Language', book.language || 'bn'],
+              [bn ? 'ভাষা' : 'Language', languageLabel(book, bn)],
               [bn ? 'সংস্করণ' : 'Edition', book.edition || (bn ? 'প্রযোজ্য নয়' : 'N/A')],
               [bn ? 'প্রকাশক' : 'Publisher', book.publisher || (bn ? 'প্রযোজ্য নয়' : 'N/A')],
             ].map(([k, v]) => (

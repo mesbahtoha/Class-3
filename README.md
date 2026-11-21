@@ -119,7 +119,7 @@ not run boot jobs; seed a fresh local database once using the command in
 
 | Pipeline | Used by | Source data | Retrieval |
 | --- | --- | --- | --- |
-| **Book RAG** | `/api/v1/tutor/*` | Published `books` + `book_chunks` | Multilingual lexical match (`keyword-v1`), Banglish variants, weighted scoring, minimum score |
+| **Book RAG** | `/api/v1/tutor/*` | Published `books` + `book_chunks` | BM25 lexical ranking with Bengali/English/Banglish query expansion, indexed candidate lookup, chapter + phrase bonuses, minimum score |
 | **Notice RAG** | Chat workspace + legacy `/api/*` | `documents` (notices) + `chunks` | Keyword/text search with academic synonyms, relevance threshold, chunk citations |
 
 The book pipeline is deliberately provider-neutral: changing the text LLM never requires
@@ -247,7 +247,8 @@ npm run dev
 2. Open `/tutor` and ask a question as a guest.
 3. Log in at `/login` (tick **Sign in as administrator** for the admin console, using the
    seeded admin account).
-4. As an admin, upload a text PDF at **Admin → Books**.
+4. As an admin, upload a textbook PDF at **Admin → Books** (scanned books are OCR'd
+   automatically), or migrate the bundled Class 3 books with `npm run ingest:pdfs -- --reindex`.
 5. Wait for `processingState: ready`, review the sample chunks, then publish.
 6. Ask a question from that book in the tutor - citations should point to real pages.
 
@@ -280,7 +281,14 @@ npm run dev
 | `COMPATIBLE_API_KEY` | - | Key for the compatible endpoint |
 | `COMPATIBLE_MODEL` | - | Model name for the compatible endpoint |
 | `GUEST_CHAT_PER_MIN` | `10` | Guest tutor requests per minute per IP |
-| `BOOK_UPLOAD_MAX_MB` | `30` | Declared setting; book ingestion currently enforces 30 MB directly |
+| `OCR_PROVIDER` | `hybrid` | `tesseract` (local only), `vision` (model only), or `hybrid` (local first, vision fallback) |
+| `OCR_VISION_MODEL` | `google/gemini-2.5-flash` | Vision model used for unclear/math-heavy scanned pages |
+| `OCR_VISION_THRESHOLD` | `62` | Tesseract confidence below this requests a vision re-read |
+| `OCR_CONCURRENCY` | `3` | Parallel OCR workers per book (1-4) |
+| `OCR_SCALE` | `3` | PDF render scale before OCR (higher is sharper but slower) |
+| `OCR_MAX_TOKENS` | `1800` | Max completion tokens per vision OCR request |
+| `OCR_CACHE_DIR` | `.cache/ocr` | Per-page OCR cache; re-runs never re-OCR the same page |
+| `BOOK_UPLOAD_MAX_MB` | `60` | Enforced by both multer and book ingestion |
 | `JWT_ACCESS_SECRET` | `dev-access-secret` | **Set a strong value in production** |
 | `JWT_REFRESH_SECRET` | `dev-refresh-secret` | **Set a strong value in production** |
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | Access-token lifetime |
@@ -323,9 +331,12 @@ npm run dev
    banglish and mixed -> Bengali; pure Bengali -> Bengali;
    pure English -> English unless the learner chose Bengali.
 4. If the question is a known short textbook reference, resolve it deterministically.
-5. Build retrieval query forms: original first, then conservative Banglish -> Bengali variants.
-6. Retrieve up to 6 chunks from published books only, filtered by book/subject/grade/curriculum.
-7. Score and keep chunks above the minimum relevance threshold.
+5. Build weighted query terms: original tokens, light stems, conservative Banglish -> Bengali
+   variants and cross-language topic synonyms (for example `gonit` -> `গণিত`).
+6. Retrieve candidate chunks by indexed token lookup (with a regex fallback for legacy chunks),
+   only from published books and filtered by book/subject/grade/curriculum.
+7. Rank candidates with BM25 plus exact-phrase and chapter-heading bonuses, drop near-duplicates,
+   and keep up to 8 chunks above the minimum relevance threshold.
 8. Build the tutor prompt with book context marked as UNTRUSTED DATA.
 9. Generate through the provider router (primary + allowlisted fallbacks, bounded retries).
 10. Sanitize HTML/JS, validate citations against retrieved chunk IDs, and return the contract.
@@ -376,7 +387,7 @@ The practice endpoint returns one grounded quiz, or `404` when no book context e
 ### Grounding rules enforced in code
 
 - Only chunks whose book has `publicationState: "published"` are retrievable.
-- Retrieval minimum score is `4`; the top 6 chunks are considered.
+- Retrieval minimum score is `1.1`; the top 8 chunks are considered.
 - Citations are derived from retrieved metadata, capped at 4 for chat and 2 for quizzes.
 - A citation whose `chunkId` is not in the retrieved set is dropped.
 - Model output is stripped of `<script>`, `<style>`, other tags, and `javascript:`.
@@ -623,27 +634,55 @@ GET /api/v1/health
 
 ## Book ingestion
 
-1. An admin uploads a PDF (max 30 MB) with title, subject, grade, curriculum, language,
-   edition, publisher, source notes, and rights status.
-2. The server checks the MIME type and size (30 MB), stores the file in GridFS (`uploads`
-   bucket), creates a `Book` in `draft`, and queues an `IngestionJob`.
-3. A detached background job verifies the `%PDF` signature, extracts text, preserves
-   sequential page labels, and splits each page into overlapping chunks (160 words, 30-word
-   overlap). An invalid signature marks the book `failed`.
-4. Chunks store denormalized book metadata, chapter hint, page range, preview text, hash,
-   and the embedding model/version tags.
-5. The book becomes `ready` when chunking completes, or `failed` with a stored error.
-6. Publishing requires `processingState: "ready"` and at least one chunk. Students only ever
-   retrieve published books.
-7. Reindex rebuilds chunks; archive/unpublish remove the book from student retrieval.
-8. Delete removes the book, its chunks, its ingestion jobs, and the GridFS file.
+1. An admin uploads a PDF (max `BOOK_UPLOAD_MAX_MB`, default 60 MB) with title, subject,
+   grade, curriculum, language, edition, publisher, source notes, and rights status.
+2. The server checks the MIME type and size, verifies the `%PDF` signature, stores the file in
+   GridFS (`uploads` bucket), creates a `Book` in `draft`, and queues an `IngestionJob`.
+3. A detached background job opens the PDF **page by page** (`pdfjs-dist` + `@napi-rs/canvas`).
+   Pages with a selectable text layer use that text directly. Image-only pages are rendered at
+   `OCR_SCALE` and OCR'd (`tesseract.js`, with a vision fallback for short, low-confidence,
+   low-Bengali-ratio, math-heavy or table-of-contents pages). Both the rendered page image and
+   the OCR result are cached on disk by checksum, page, provider, model and scale, so
+   interrupted jobs resume without re-rendering or re-paying for OCR.
+4. Running headers/footers and page numbers repeated across pages are removed. The printed
+   table of contents is parsed to recover chapter titles, order and page ranges. If no usable
+   TOC exists, headings at the top of content pages are used instead. Cover pages, TOC pages,
+   model refusals, repeated filename loops and legacy ANSI/mojibake pages are excluded from
+   retrieval (`pageType: toc | front | noise`).
+5. Text is split into 160-word chunks with a 30-word overlap, never crossing chapter boundaries.
+   Chunks store the **real page range**, chapter ID/title/order, source (`text`/`ocr`), preview,
+   search terms, hash, and embedding model/version tags.
+6. The book becomes `ready` when chunking completes, or `failed` with a stored error. The job
+   records page counts, empty pages, vision usage and estimated cost.
+7. Publishing requires `processingState: "ready"` and at least one chunk. Students only ever
+   retrieve published books. Reindex replaces existing chunks; unpublish removes the book from
+   student retrieval; delete removes the book, chunks, jobs and GridFS file.
 
-Important limits:
+### Migrating the four Class 3 PDFs
 
-- **Text PDFs only.** Scanned PDFs without selectable text produce a warning and no chunks.
-  OCR/vision extraction is not included.
-- Duplicate uploads are not blocked by checksum, but the checksum is stored for auditing.
-- Reindexing replaces existing chunks for that book.
+```bash
+# Dry run: list what would change (no writes)
+npm run ingest:pdfs -- --dry-run
+
+# Ingest / force-reindex all PDFs in ../Pdf, then verify retrieval
+npm run ingest:pdfs -- --reindex --answer-check
+
+# Smoke-test one book with only the first 8 pages
+npm run ingest:pdfs -- --only Bangla --reindex --limit-pages 8
+
+# Verification only
+npm run ingest:pdfs -- --verify-only
+```
+
+Use `DB_NAME=<isolated-db>` to test against a separate database before writing to production.
+Every run is idempotent by PDF checksum and the OCR/render cache.
+
+To clean up chunks produced by older versions of the pipeline:
+
+```bash
+npm run db:fix-chunks            # dry run
+npm run db:fix-chunks -- --apply # mark refusals/mojibake/filename loops as noise
+```
 
 ---
 

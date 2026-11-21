@@ -8,6 +8,13 @@ import type { BookInfo } from '@/types';
 const PAGE_SIZE = 9;
 const SUBJECT_COLORS: Record<string, string> = { English: '#8B5CF6', Bangla: '#0D9488', Math: '#D97706', Science: '#16A34A' };
 
+function languageLabel(book: BookInfo, bn: boolean): string {
+  const code = book.ocrLanguage || book.language;
+  if (code === 'bn') return bn ? 'বাংলা' : 'Bengali';
+  if (code === 'en') return 'English';
+  return code || (bn ? 'বাংলা/ইংরেজি' : 'bn/en');
+}
+
 function SkeletonCards() {
   return (
     <div className="book-grid" aria-hidden="true">
@@ -118,7 +125,7 @@ export function BooksPage() {
                 <div className="book-body">
                   <h3>{b.title}</h3>
                   <p className="muted small book-desc">{b.grade} • {b.curriculum}{b.edition ? ` • ${b.edition}` : ''}</p>
-                  <p className="muted small book-meta">{b.language || (bn ? 'বাংলা/ইংরেজি' : 'bn/en')}{typeof b.chunkCount === 'number' ? ` • ${b.chunkCount} sections` : ''}</p>
+                  <p className="muted small book-meta">{languageLabel(b, bn)}{typeof b.chunkCount === 'number' ? ` • ${b.chunkCount} sections` : ''}</p>
                   <Link to={`/books/${b._id}`} className="pg-btn-secondary book-btn">{t('action.viewDetails')}</Link>
                 </div>
               </article>

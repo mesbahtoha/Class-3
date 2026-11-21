@@ -25,3 +25,5 @@ npm-debug.log*
 # Uploads / generated data
 uploads/
 coverage/
+# Per-page OCR cache for scanned textbook ingestion
+.cache/

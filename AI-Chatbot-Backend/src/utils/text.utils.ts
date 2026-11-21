@@ -331,6 +331,353 @@ export function computeKeywordScore(haystack: unknown, query: unknown): number {
   return score;
 }
 
+/* ------------------------------------------------------------------ */
+/* Content retrieval helpers (BM25)                                   */
+/* ------------------------------------------------------------------ */
+
+const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
+
+/** Converts Bengali digits to ASCII so queries and books compare equally. */
+export function normalizeDigits(text: unknown): string {
+  return String(text ?? '').replace(/[০-৯]/g, (digit) => String(BN_DIGITS.indexOf(digit)));
+}
+
+/**
+ * Aggressive, script-aware normalization used for search indexing only.
+ * Display text is never changed by this function.
+ */
+export function normalizeForIndex(text: unknown): string {
+  return normalizeText(text)
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[০-৯]/g, (digit) => String(BN_DIGITS.indexOf(digit)))
+    .replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Words that carry no topic signal in a Class 3 textbook question. */
+const CONTENT_STOP_WORDS = new Set([
+  // English
+  'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'am',
+  'do', 'does', 'did', 'can', 'could', 'should', 'would', 'will', 'shall',
+  'may', 'might', 'must', 'to', 'of', 'in', 'on', 'at', 'by', 'for', 'with',
+  'from', 'about', 'into', 'over', 'under', 'and', 'or', 'but', 'if', 'then',
+  'than', 'so', 'as', 'this', 'that', 'these', 'those', 'it', 'its', 'i',
+  'you', 'he', 'she', 'we', 'they', 'me', 'my', 'your', 'his', 'her', 'our',
+  'their', 'what', 'which', 'who', 'whom', 'whose', 'when', 'where', 'why',
+  'how', 'please', 'tell', 'show', 'give', 'explain', 'help', 'want', 'need',
+  'know', 'read', 'write', 'say', 'said', 'also', 'very', 'just', 'some',
+  'any', 'all', 'more', 'most', 'much', 'many', 'one', 'two', 'three',
+  'class', 'book', 'page', 'chapter', 'unit', 'lesson', 'question', 'answer',
+  'activity', 'exercise', 'textbook', 'subject', 'topic',
+  // Bengali
+  'কি', 'কী', 'কেন', 'কিভাবে', 'কীভাবে', 'কোথায়', 'কোথায়', 'কত', 'কতটা',
+  'কে', 'কার', 'কোন', 'কোনটি', 'কোনটা', 'এবং', 'বা', 'ও', 'এর', 'এই', 'সেই',
+  'একটি', 'একটা', 'আমি', 'আমার', 'আমরা', 'তুমি', 'তোমার', 'সে', 'তার',
+  'তারা', 'এটা', 'সেটা', 'এখানে', 'সেখানে', 'করে', 'কর', 'করো', 'করব', 'হয়',
+  'হয়', 'হবে', 'হল', 'হলো', 'আছে', 'নেই', 'থেকে', 'জন্য', 'সাথে', 'মধ্যে',
+  'ব্যাখ্যা', 'বুঝিয়ে', 'বুঝাও', 'বল', 'বলো', 'দাও', 'দেখাও', 'শেখাও', 'সহজ',
+  'ছোট', 'বড়', 'ভালো', 'আবার', 'এখন', 'তাহলে', 'কারণ', 'যেমন', 'তেমন',
+  'বই', 'পৃষ্ঠা', 'অধ্যায়', 'অধ্যায়', 'পাঠ', 'ইউনিট', 'প্রশ্ন', 'উত্তর',
+  'অনুশীলনী', 'কাজ', 'লেখা', 'পড়া', 'পড়া', 'মানে',
+]);
+
+/**
+ * Cross-language topic aliases. Keys and values are normalized before lookup.
+ * This is deliberately about Class 3 textbook topics, not general synonyms.
+ */
+const CONTENT_SYNONYMS: Record<string, string[]> = {
+  // Subjects
+  bangla: ['বাংলা', 'bangla', 'bengali'],
+  বাংলা: ['bangla', 'bengali'],
+  english: ['ইংরেজি', 'english'],
+  ইংরেজি: ['english'],
+  math: ['গণিত', 'gonit', 'অঙ্ক', 'অংক', 'mathematics'],
+  mathematics: ['গণিত', 'math', 'gonit'],
+  গণিত: ['math', 'mathematics', 'gonit', 'অঙ্ক', 'অংক'],
+  অঙ্ক: ['গণিত', 'math', 'gonit'],
+  science: ['বিজ্ঞান', 'biggan'],
+  বিজ্ঞান: ['science', 'biggan'],
+  islam: ['ইসলাম', 'ইসলাম শিক্ষা', 'dhormo'],
+  ইসলাম: ['islam', 'ইসলাম শিক্ষা'],
+  religion: ['ধর্ম', 'ইসলাম', 'islam'],
+  ধর্ম: ['religion', 'ইসলাম', 'islam'],
+
+  // Math concepts
+  fraction: ['ভগ্নাংশ', 'vognangsho', 'bhognangsho'],
+  ভগ্নাংশ: ['fraction', 'vognangsho', 'bhognangsho'],
+  addition: ['যোগ', 'jog', 'plus'],
+  যোগ: ['addition', 'jog', 'plus'],
+  subtraction: ['বিয়োগ', 'biyog', 'minus'],
+  বিয়োগ: ['subtraction', 'biyog', 'minus'],
+  multiplication: ['গুণ', 'gun', 'times'],
+  গুণ: ['multiplication', 'gun', 'times'],
+  division: ['ভাগ', 'vag', 'divide'],
+  ভাগ: ['division', 'vag', 'divide'],
+  number: ['সংখ্যা', 'songkha', 'numbers'],
+  সংখ্যা: ['number', 'songkha', 'numbers'],
+  decimal: ['দশমিক', 'doshomik'],
+  দশমিক: ['decimal', 'doshomik'],
+  geometry: ['জ্যামিতি', 'geometry'],
+  জ্যামিতি: ['geometry'],
+  circle: ['বৃত্ত', 'britto'],
+  বৃত্ত: ['circle', 'britto'],
+  triangle: ['ত্রিভুজ', 'tribhuj'],
+  ত্রিভুজ: ['triangle', 'tribhuj'],
+  rectangle: ['আয়তক্ষেত্র', 'ayotkkhetro'],
+  আয়তক্ষেত্র: ['rectangle'],
+  square: ['বর্গ', 'borgo'],
+  বর্গ: ['square', 'borgo'],
+  length: ['দৈর্ঘ্য', 'doirgho'],
+  দৈর্ঘ্য: ['length', 'doirgho'],
+  width: ['প্রস্থ', 'prostho'],
+  প্রস্থ: ['width', 'prostho'],
+  weight: ['ওজন', 'ojon'],
+  ওজন: ['weight', 'ojon'],
+  measurement: ['পরিমাপ', 'porimap'],
+  পরিমাপ: ['measurement', 'porimap'],
+  money: ['টাকা', 'taka', 'poisa'],
+  টাকা: ['money', 'taka'],
+  time: ['সময়', 'shomoy'],
+  সময়: ['time', 'shomoy'],
+
+  // Bangla language
+  letter: ['বর্ণ', 'borno', 'অক্ষর'],
+  বর্ণ: ['letter', 'borno', 'অক্ষর'],
+  alphabet: ['বর্ণমালা', 'bornomala'],
+  বর্ণমালা: ['alphabet', 'bornomala'],
+  word: ['শব্দ', 'shobdo'],
+  শব্দ: ['word', 'shobdo'],
+  sentence: ['বাক্য', 'bakko'],
+  বাক্য: ['sentence', 'bakko'],
+  poem: ['কবিতা', 'kobita'],
+  কবিতা: ['poem', 'kobita'],
+  story: ['গল্প', 'golpo'],
+  গল্প: ['story', 'golpo'],
+
+  // Science
+  plant: ['গাছ', 'উদ্ভিদ', 'gach', 'udbhid'],
+  গাছ: ['plant', 'tree', 'gach', 'উদ্ভিদ'],
+  উদ্ভিদ: ['plant', 'গাছ', 'udbhid'],
+  tree: ['গাছ', 'plant', 'gach'],
+  animal: ['প্রাণী', 'পশু', 'prani'],
+  প্রাণী: ['animal', 'prani', 'পশু'],
+  পশু: ['animal', 'প্রাণী', 'prani'],
+  water: ['পানি', 'জল', 'pani', 'jol'],
+  পানি: ['water', 'জল', 'pani', 'jol'],
+  জল: ['water', 'পানি', 'pani', 'jol'],
+  air: ['বাতাস', 'বায়ু', 'batash'],
+  বাতাস: ['air', 'বায়ু', 'batash'],
+  বায়ু: ['air', 'বাতাস', 'batash'],
+  food: ['খাবার', 'খাদ্য', 'khabar'],
+  খাবার: ['food', 'খাদ্য', 'khabar'],
+  sky: ['আকাশ', 'akash'],
+  আকাশ: ['sky', 'akash'],
+  sun: ['সূর্য', 'suryo'],
+  সূর্য: ['sun', 'suryo'],
+  moon: ['চাঁদ', 'chand'],
+  চাঁদ: ['moon', 'chand'],
+  earth: ['পৃথিবী', 'prithibi'],
+  পৃথিবী: ['earth', 'prithibi'],
+  river: ['নদী', 'nodi'],
+  নদী: ['river', 'nodi'],
+  fish: ['মাছ', 'mach'],
+  মাছ: ['fish', 'mach'],
+  bird: ['পাখি', 'pakhi'],
+  পাখি: ['bird', 'pakhi'],
+  flower: ['ফুল', 'phul'],
+  ফুল: ['flower', 'phul'],
+  fruit: ['ফল', 'phol'],
+  ফল: ['fruit', 'phol'],
+  weather: ['আবহাওয়া', 'abohawa'],
+  আবহাওয়া: ['weather', 'abohawa'],
+  environment: ['পরিবেশ', 'poribesh'],
+  পরিবেশ: ['environment', 'poribesh'],
+  body: ['শরীর', 'shorir'],
+  শরীর: ['body', 'shorir'],
+  health: ['স্বাস্থ্য', 'shastho'],
+  স্বাস্থ্য: ['health', 'shastho'],
+
+  // Islam
+  allah: ['আল্লাহ', 'allah'],
+  আল্লাহ: ['allah'],
+  quran: ['কুরআন', 'কোরআন', 'quran'],
+  কুরআন: ['quran', 'কোরআন'],
+  কোরআন: ['quran', 'কুরআন'],
+  prayer: ['নামাজ', 'সালাত', 'namaz', 'salat'],
+  নামাজ: ['prayer', 'salat', 'namaz'],
+  সালাত: ['prayer', 'নামাজ', 'salat'],
+  fasting: ['রোজা', 'সিয়াম', 'roja'],
+  রোজা: ['fasting', 'সিয়াম', 'roja'],
+  zakat: ['যাকাত', 'jakat'],
+  যাকাত: ['zakat', 'jakat'],
+  hajj: ['হজ', 'হজ্জ', 'hajj'],
+  হজ: ['hajj', 'হজ্জ'],
+  prophet: ['নবী', 'রাসূল', 'nobi', 'rasul'],
+  নবী: ['prophet', 'রাসূল', 'nobi'],
+  রাসূল: ['prophet', 'নবী', 'rasul'],
+  hadith: ['হাদিস', 'হাদীস', 'hadis'],
+  হাদিস: ['hadith', 'হাদীস', 'hadis'],
+  mosque: ['মসজিদ', 'masjid'],
+  মসজিদ: ['mosque', 'masjid'],
+
+  // Bangladesh / general
+  bangladesh: ['বাংলাদেশ', 'bangladesh'],
+  বাংলাদেশ: ['bangladesh'],
+  flag: ['পতাকা', 'potaka'],
+  পতাকা: ['flag', 'potaka'],
+  national: ['জাতীয়', 'jatiyo'],
+  জাতীয়: ['national', 'jatiyo'],
+  family: ['পরিবার', 'poribar'],
+  পরিবার: ['family', 'poribar'],
+  mother: ['মা', 'আম্মু', 'ma'],
+  মা: ['mother', 'ma'],
+  father: ['বাবা', 'আব্বু', 'baba'],
+  বাবা: ['father', 'baba'],
+  teacher: ['শিক্ষক', 'শিক্ষিকা', 'shikkhok'],
+  শিক্ষক: ['teacher', 'shikkhok'],
+  school: ['বিদ্যালয়', 'স্কুল', 'bidyaloy'],
+  বিদ্যালয়: ['school', 'bidyaloy'],
+  friend: ['বন্ধু', 'bondhu'],
+  বন্ধু: ['friend', 'bondhu'],
+};
+
+/** Conservative suffix stripping for Bengali search tokens. */
+export function stemForSearch(token: string): string {
+  const word = String(token ?? '').trim();
+  if (!/[\u0980-\u09FF]/.test(word) || word.length < 4) return word;
+  const suffixes = ['গুলোর', 'গুলো', 'দেরকে', 'দের', 'টির', 'টিতে', 'টার', 'টাতে', 'ের', 'এর', 'তে', 'টি', 'টা', 'কে'];
+  for (const suffix of suffixes) {
+    if (word.length > suffix.length + 2 && word.endsWith(suffix)) {
+      return word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
+/** Very light English stemmer for search recall only. */
+export function stemEnglish(token: string): string {
+  const word = String(token ?? '').toLowerCase();
+  if (!/^[a-z]+$/.test(word) || word.length < 5) return word;
+  if (word.endsWith('ies') && word.length > 6) return `${word.slice(0, -3)}y`;
+  if (word.endsWith('es') && word.length > 5) return word.slice(0, -2);
+  if (word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
+  if (word.endsWith('ing') && word.length > 6) return word.slice(0, -3);
+  if (word.endsWith('ed') && word.length > 5) return word.slice(0, -2);
+  return word;
+}
+
+export function contentTokens(text: unknown): string[] {
+  return normalizeForIndex(text)
+    .split(/\s+/)
+    .filter((token) => (token.length >= 2 || /^\d$/.test(token)) && !CONTENT_STOP_WORDS.has(token));
+}
+
+export interface QueryTerm {
+  term: string;
+  weight: number;
+  /** True when the term comes from the learner's own words (or a stem of them). */
+  original: boolean;
+}
+
+/**
+ * Expands a question into weighted search terms: original words, light stems,
+ * cross-language topic aliases and Banglish variants. No LLM call required.
+ */
+export function buildQueryTerms(query: string, extraForms: string[] = []): QueryTerm[] {
+  const terms = new Map<string, QueryTerm>();
+  const add = (term: string, weight: number, original: boolean) => {
+    const clean = normalizeForIndex(term);
+    if (!clean || (clean.length < 2 && !/^\d$/.test(clean)) || CONTENT_STOP_WORDS.has(clean)) return;
+    const existing = terms.get(clean);
+    if (!existing) terms.set(clean, { term: clean, weight, original });
+    else {
+      existing.weight = Math.max(existing.weight, weight);
+      existing.original = existing.original || original;
+    }
+  };
+
+  const forms = [query, ...extraForms];
+  for (const form of forms) {
+    const tokens = contentTokens(form);
+    for (const token of tokens) {
+      add(token, 1, true);
+      const stem = /[\u0980-\u09FF]/.test(token) ? stemForSearch(token) : stemEnglish(token);
+      if (stem !== token) add(stem, 0.9, true);
+      for (const alias of CONTENT_SYNONYMS[token] ?? []) add(alias, 0.62, false);
+      for (const alias of CONTENT_SYNONYMS[stem] ?? []) add(alias, 0.55, false);
+    }
+  }
+
+  return Array.from(terms.values())
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 48);
+}
+
+/** Tokens stored on each chunk for indexed candidate lookup. */
+export function chunkSearchTerms(text: unknown, extra?: string): string[] {
+  const tokens = contentTokens(`${String(extra ?? '')} ${String(text ?? '')}`);
+  const out = new Set<string>();
+  for (const token of tokens) {
+    out.add(token);
+    const stem = /[\u0980-\u09FF]/.test(token) ? stemForSearch(token) : stemEnglish(token);
+    if (stem !== token) out.add(stem);
+  }
+  return Array.from(out).slice(0, 500);
+}
+
+export interface MatchStats {
+  matchedOriginal: number;
+  matchedTotal: number;
+  coverage: number;
+}
+
+export function matchStats(docTokens: Set<string>, queryTerms: QueryTerm[]): MatchStats {
+  const original = new Set<string>();
+  let matchedOriginal = 0;
+  let matchedTotal = 0;
+  for (const term of queryTerms) {
+    if (term.original) original.add(term.term);
+    if (!docTokens.has(term.term)) continue;
+    matchedTotal += 1;
+    if (term.original) matchedOriginal += 1;
+  }
+  return {
+    matchedOriginal,
+    matchedTotal,
+    coverage: original.size ? matchedOriginal / original.size : 0,
+  };
+}
+
+/** BM25 ranking over an in-memory candidate set. */
+export function bm25Score(
+  docTokens: string[],
+  queryTerms: QueryTerm[],
+  documentFrequency: Map<string, number>,
+  documentCount: number,
+  averageLength: number
+): number {
+  if (!docTokens.length || !queryTerms.length || !documentCount) return 0;
+  const k1 = 1.2;
+  const b = 0.75;
+  const length = docTokens.length;
+  const frequencies = new Map<string, number>();
+  for (const token of docTokens) frequencies.set(token, (frequencies.get(token) ?? 0) + 1);
+
+  let score = 0;
+  for (const term of queryTerms) {
+    const frequency = frequencies.get(term.term);
+    if (!frequency) continue;
+    const df = documentFrequency.get(term.term) ?? 0;
+    if (!df) continue;
+    const idf = Math.log(1 + (documentCount - df + 0.5) / (df + 0.5));
+    const denominator = frequency + k1 * (1 - b + (b * length) / Math.max(1, averageLength));
+    score += term.weight * idf * ((frequency * (k1 + 1)) / denominator);
+  }
+  return score;
+}
+
 export function detectLanguage(query: string): 'bn' | 'en' {
   const bnRegex = /[\u0980-\u09FF]/;
   return bnRegex.test(query) ? 'bn' : 'en';

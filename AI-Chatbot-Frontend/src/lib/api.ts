@@ -151,12 +151,35 @@ export function getErrorMessage(error: unknown): string {
 
 export type { AttemptResponse, PracticeAttempt, PracticeBookSummary, PracticeChapterSummary, PracticeQuestionSetSummary, QuestionResult };
 
+/**
+ * Practice responses are validated at the boundary so a malformed or partial
+ * payload becomes one clear error instead of a crash deep inside a page.
+ */
+function unexpectedResponse(): never {
+  throw new ApiRequestError('The server sent an unexpected response. Please try again.', 502);
+}
+
+function assertArray(value: unknown): asserts value is unknown[] {
+  if (!Array.isArray(value)) unexpectedResponse();
+}
+
+function assertAttempt(value: unknown): asserts value is PracticeAttempt {
+  const attempt = value as Partial<PracticeAttempt> | null | undefined;
+  if (!attempt || typeof attempt._id !== 'string' || !Array.isArray(attempt.questions) || !Array.isArray(attempt.answers)) {
+    unexpectedResponse();
+  }
+}
+
 export async function listPracticeBooks(): Promise<{ books: PracticeBookSummary[] }> {
-  return apiGet<{ books: PracticeBookSummary[] }>('/api/v1/practice/books');
+  const data = await apiGet<{ books?: unknown }>('/api/v1/practice/books');
+  assertArray(data?.books);
+  return { books: data.books as PracticeBookSummary[] };
 }
 
 export async function listPracticeChapters(bookId: string): Promise<{ chapters: PracticeChapterSummary[] }> {
-  return apiGet<{ chapters: PracticeChapterSummary[] }>(`/api/v1/practice/books/${bookId}/chapters`);
+  const data = await apiGet<{ chapters?: unknown }>(`/api/v1/practice/books/${bookId}/chapters`);
+  assertArray(data?.chapters);
+  return { chapters: data.chapters as PracticeChapterSummary[] };
 }
 
 export async function listPracticeSets(params: { bookId?: string; chapterIds?: string[]; questionType?: string; mode?: string }) {
@@ -181,20 +204,24 @@ export async function startPracticeAttempt(body: {
   mode: 'practice' | 'exam';
   chapters?: string[];
 }) {
-  const { data } = await api.post<{ success: boolean; attempt: import('@/types').PracticeAttempt; created?: boolean }>('/api/v1/practice/attempts', body);
-  return data;
+  const { data } = await api.post<{ success: boolean; attempt?: unknown; created?: boolean }>('/api/v1/practice/attempts', body);
+  assertAttempt(data?.attempt);
+  return { ...data, attempt: data.attempt };
 }
 
 export async function checkPracticeAnswer(id: string, questionId: string, value: unknown) {
-  const { data } = await api.post<{ success: boolean; result: import('@/types').QuestionResult }>(
+  const { data } = await api.post<{ success: boolean; result?: import('@/types').QuestionResult }>(
     `/api/v1/practice/attempts/${id}/check`,
     { questionId, value }
   );
-  return data;
+  if (!data?.result || typeof data.result.questionId !== 'string') unexpectedResponse();
+  return { ...data, result: data.result };
 }
 
 export async function getPracticeAttempt(id: string) {
-  return apiGet<import('@/types').AttemptResponse>(`/api/v1/practice/attempts/${id}`);
+  const data = await apiGet<import('@/types').AttemptResponse>(`/api/v1/practice/attempts/${id}`);
+  assertAttempt(data?.attempt);
+  return data;
 }
 
 export async function savePracticeAnswers(id: string, answers: Array<{ questionId: string; value: unknown }>) {
@@ -202,6 +229,7 @@ export async function savePracticeAnswers(id: string, answers: Array<{ questionI
     `/api/v1/practice/attempts/${id}/answers`,
     answers
   );
+  assertAttempt(data?.attempt);
   return data;
 }
 
@@ -210,6 +238,7 @@ export async function submitPracticeAnswers(id: string, answers: Array<{ questio
     `/api/v1/practice/attempts/${id}/submit`,
     answers
   );
+  assertAttempt(data?.attempt);
   return data;
 }
 

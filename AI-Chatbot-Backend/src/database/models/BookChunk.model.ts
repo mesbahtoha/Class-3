@@ -20,6 +20,12 @@ const bookChunkSchema = new Schema(
     text: { type: String, default: '' },
     normalizedText: { type: String, default: '' },
     preview: { type: String, default: '' },
+    /** Unique content tokens + light stems, used for indexed candidate lookup. */
+    searchTerms: { type: [String], default: [] },
+    pageType: { type: String, enum: ['content', 'toc', 'front', 'noise'], default: 'content', index: true },
+    source: { type: String, enum: ['text', 'ocr', 'none'], default: 'text' },
+    ocrModel: { type: String, default: '' },
+    ocrScale: { type: Number, default: 0 },
     hash: { type: String, default: '', index: true },
     embeddingModel: { type: String, default: 'keyword-v1' },
     embeddingVersion: { type: Number, default: 1 },
@@ -28,6 +34,8 @@ const bookChunkSchema = new Schema(
 );
 
 bookChunkSchema.index({ bookId: 1, chunkIndex: 1 });
+bookChunkSchema.index({ bookId: 1, searchTerms: 1 });
+bookChunkSchema.index({ bookId: 1, pageType: 1 });
 bookChunkSchema.index({ bookTitle: 'text', text: 'text', normalizedText: 'text', chapterTitle: 'text' });
 
 export type BookChunkDocument = InferSchemaType<typeof bookChunkSchema> & {

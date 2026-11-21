@@ -39,7 +39,7 @@ export function buildSeedPitchDeck(): DocsDraft['pitchDeck'] {
       `Verified live application: https://departmental-ai-chatbot-dkpf.vercel.app.`,
       'AI Tutor: ask a Class 3 question, get a textbook-based answer with real page citations.',
       'Practice & Exam: create practice sets and exams in the new Practice section — deterministic evaluation, instant feedback.',
-      'Books: the admin manages published textbooks in one catalogue (English For Today, Class 3 Demo Practice Book, Class-3 Bangla / Math / Science / Islam books).',
+      'Books: the admin manages published textbooks in one catalogue (English For Today, Class-3 Bangla / Math / Science / Islam books).',
     ]),
     pitchBlock('market', 'Market Opportunity (assumptions)', [
       'Assumption: Bangladesh has millions of primary school learners studying through NCTB textbooks at primary level.',

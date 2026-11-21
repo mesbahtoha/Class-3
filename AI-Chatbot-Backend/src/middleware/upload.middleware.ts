@@ -1,4 +1,5 @@
 import multer from 'multer';
+import env from '../config/env';
 
 const NOTICE_ALLOWED = [
   'application/pdf',
@@ -65,7 +66,7 @@ export const uploadNoticeFile = multer({
 /** Multipart upload for admin textbook PDFs (validated server-side by signature). */
 export const uploadBookFile = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 30 * 1024 * 1024 },
+  limits: { fileSize: env.tutor.uploadMaxMb * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype === 'application/pdf') cb(null, true);
     else cb(new Error('Only PDF books are supported in this version'));
