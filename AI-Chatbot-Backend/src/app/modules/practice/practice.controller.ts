@@ -12,12 +12,20 @@ export const practiceController = {
 
   startAttempt: async (
     userId: string,
-    body: { setId: string; mode: 'practice' | 'exam'; chapters?: string[] }
+    body: { bookId: string; questionType: string; mode: 'practice' | 'exam'; chapters?: string[] }
   ) => {
-    const attempt = await practiceService.startAttempt(userId, body.setId, body.mode, {
-      chapters: (body.chapters ?? []).map((id) => ({ id, title: '', order: 0 })),
+    const attempt = await practiceService.startAttempt(userId, {
+      bookId: body.bookId,
+      questionType: body.questionType,
+      mode: body.mode,
+      chapterIds: body.chapters,
     });
     return attempt;
+  },
+
+  checkAnswer: async (userId: string, attemptId: string, questionId: string, value: unknown) => {
+    const { result } = await practiceService.checkAnswer(userId, attemptId, questionId, value);
+    return { result };
   },
 
   getAttempt: async (userId: string, attemptId: string) => {

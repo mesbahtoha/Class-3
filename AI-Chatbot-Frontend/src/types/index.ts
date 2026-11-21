@@ -501,12 +501,9 @@ export interface AttemptQuestion {
   questionType: PracticeQuestionType;
   order: number;
   marks: number;
+  chapterId?: string;
+  chapterTitle?: string;
   payload: StudentQuestionPayload;
-  /**
-   * Correct answer, revealed in the student's own session while answering
-   * (practice mode). Exam mode hides it until submission.
-   */
-  answer?: Record<string, unknown>;
 }
 
 export interface QuestionResult {

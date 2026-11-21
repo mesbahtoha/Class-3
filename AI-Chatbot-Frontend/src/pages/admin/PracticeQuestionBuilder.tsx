@@ -15,6 +15,7 @@ interface PracticeQuestionBuilderProps {
 
 interface BuilderState {
   questionType: string;
+  chapterId: string;
   marks: number;
   question: string;
   options: string[];
@@ -63,6 +64,7 @@ export function PracticeQuestionBuilder({ open, onClose, onSaved, set, existingQ
     if (!open) return;
     const next: BuilderState = {
       questionType: set?.questionType ?? 'mcq',
+      chapterId: set?.chapters?.[0]?.id ?? '',
       marks: set?.marksPerQuestion ?? 1,
       question: '',
       options: ['Option 1', 'Option 2'],
@@ -89,6 +91,7 @@ export function PracticeQuestionBuilder({ open, onClose, onSaved, set, existingQ
       const payload = (existingQuestion.payload ?? {}) as Record<string, unknown>;
       const answer = (existingQuestion.answer ?? {}) as Record<string, unknown>;
       next.questionType = String(existingQuestion.questionType ?? 'mcq');
+      next.chapterId = String(existingQuestion.chapterId || set?.chapters?.[0]?.id || '');
       next.marks = Number(existingQuestion.marks ?? set?.marksPerQuestion ?? 1);
       next.question = String(payload.question ?? '');
       next.options = Array.isArray(payload.options) ? payload.options.map((o) => String(o)) : ['Option 1', 'Option 2'];
@@ -158,8 +161,7 @@ export function PracticeQuestionBuilder({ open, onClose, onSaved, set, existingQ
 
     const payload: Record<string, unknown> = {
       ...question,
-      chapterId: set?.chapters?.[0]?.id ?? '',
-      chapterTitle: set?.chapters?.[0]?.title ?? '',
+      chapterId: state.chapterId,
     };
 
     if (mode === 'create') {
@@ -176,6 +178,16 @@ export function PracticeQuestionBuilder({ open, onClose, onSaved, set, existingQ
   return (
     <Modal open={open} onClose={onClose} title={mode === 'create' ? 'Add question' : 'Edit question'} maxWidth={680}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {(set?.chapters?.length ?? 0) > 1 && (
+          <Field label="Chapter">
+            <Select value={state.chapterId} onChange={(e) => update({ chapterId: e.target.value })}>
+              {set?.chapters.map((chapter) => (
+                <option key={chapter.id} value={chapter.id}>{chapter.title}</option>
+              ))}
+            </Select>
+          </Field>
+        )}
+
         <Field label="Question type">
           <Select value={state.questionType} onChange={(e) => update({ questionType: e.target.value })}>
             {QUESTION_TYPE_OPTIONS.map((option) => (

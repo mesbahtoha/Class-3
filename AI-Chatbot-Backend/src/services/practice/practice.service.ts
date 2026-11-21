@@ -4,7 +4,7 @@ import { PracticeQuestionModel } from '../../database/models/PracticeQuestion.mo
 import { PracticeQuestionSetModel } from '../../database/models/PracticeQuestionSet.model';
 import { PracticeAttemptModel } from '../../database/models/PracticeAttempt.model';
 import { PRACTICE_MODES } from '../../constants';
-import { evaluateAttempt } from './attempt-evaluator.service';
+import { evaluateAttempt, evaluateQuestion } from './attempt-evaluator.service';
 import { listChaptersForBook } from './chapters.service';
 import { ChapterRef, QuestionSnapshot } from './types';
 import { PracticeError } from './types';
@@ -20,6 +20,8 @@ interface QuestionDocLike {
   questionType: string;
   order: number;
   marks: number;
+  chapterId?: string;
+  chapterTitle?: string;
   payload: Record<string, unknown>;
   answer: Record<string, unknown>;
   alternatives?: unknown;
@@ -37,6 +39,8 @@ function questionSnapshot(question: QuestionDocLike): QuestionSnapshot {
     questionType: (question.questionType as QuestionSnapshot['questionType']) || 'mcq',
     order: Number(question.order ?? 0),
     marks: Number(question.marks ?? 0),
+    chapterId: String(question.chapterId ?? ''),
+    chapterTitle: String(question.chapterTitle ?? ''),
     payload: payload as unknown as QuestionSnapshot['payload'],
     answer: answer as unknown as QuestionSnapshot['answer'],
     alternatives: Array.isArray(question.alternatives) ? (question.alternatives as unknown[]).map((i) => String(i)) : [],
@@ -71,27 +75,23 @@ function isEmptyAnswer(value: unknown): boolean {
   return normalized.length === 0;
 }
 
-function toPublicQuestion(snapshot: QuestionSnapshot, options: { reveal?: boolean } = {}) {
-  const publicQuestion = {
+/** Student-facing question. Answers are never included before submission. */
+function toPublicQuestion(snapshot: QuestionSnapshot) {
+  return {
     questionId: snapshot.questionId,
     questionType: snapshot.questionType,
     order: snapshot.order,
     marks: snapshot.marks,
+    chapterId: snapshot.chapterId ?? '',
+    chapterTitle: snapshot.chapterTitle ?? '',
     payload: snapshot.payload,
   };
-  // In practice mode the student may see the correct answer while answering
-  // ("am I correct?"); exam mode keeps answers hidden until submission.
-  if (options.reveal) {
-    return { ...publicQuestion, answer: snapshot.answer };
-  }
-  return publicQuestion;
 }
 
 function toPublicAttempt(attempt: Record<string, unknown>, options: { includeResults?: boolean } = {}) {
   const questions = (Array.isArray(attempt.questions) ? attempt.questions : []) as QuestionSnapshot[];
   const answers = Array.isArray(attempt.answers) ? attempt.answers : [];
   const results = Array.isArray(attempt.results) ? (attempt.results as Array<Record<string, unknown>>) : [];
-  const revealAnswers = attempt.mode === 'practice';
 
   const publicAttempt: Record<string, unknown> = {
     _id: String(attempt._id),
@@ -106,8 +106,9 @@ function toPublicAttempt(attempt: Record<string, unknown>, options: { includeRes
     subject: String(attempt.subject ?? ''),
     chapters: Array.isArray(attempt.chapters) ? (attempt.chapters as ChapterRef[]) : [],
     questionType: attempt.questionType,
-    questions: questions.map((question) => toPublicQuestion(question, { reveal: revealAnswers })),
+    questions: questions.map((question) => toPublicQuestion(question)),
     answers,
+    allowUnanswered: Boolean(attempt.allowUnanswered),
     totalQuestions: Number(attempt.totalQuestions ?? questions.length),
     totalMarks: Number(attempt.totalMarks ?? 0),
     obtainedMarks: Number(attempt.obtainedMarks ?? 0),
@@ -200,55 +201,90 @@ async function loadAttempt(userId: string, attemptId: string): Promise<Record<st
 /* Attempts                                                          */
 /* ------------------------------------------------------------------ */
 
+interface StartAttemptOptions {
+  /** Owner of the attempt: the student, or the admin for previews. */
+  userId: string;
+  /** Selected chapter ids. Empty means every chapter of the selected sets. */
+  chapterIds?: string[];
+  preview?: boolean;
+}
+
+/**
+ * Creates an attempt from one or more published sets that share a book and
+ * question type. Questions are snapshotted so later admin edits cannot change
+ * an attempt that is already running.
+ */
 export async function startPracticeAttempt(
-  set: Record<string, unknown>,
-  setId: string,
+  sets: Array<Record<string, unknown>>,
   mode: 'practice' | 'exam',
-  options: { chapters?: ChapterRef[]; preview?: boolean; previewUserId?: string } = {}
+  options: StartAttemptOptions
 ): Promise<Record<string, unknown>> {
+  if (sets.length === 0) {
+    throw new PracticeError(404, 'No question sets found for this selection');
+  }
   const isPreview = Boolean(options.preview);
-  if (mode === 'exam') {
-    if (!Boolean(set.examModeEnabled) && !isPreview) {
-      throw new PracticeError(400, 'Exam mode is not enabled for this question set');
+  const primary = sets[0];
+
+  if (!isPreview) {
+    const modeEnabled = sets.every((set) =>
+      mode === 'exam' ? Boolean(set.examModeEnabled) : Boolean(set.practiceModeEnabled)
+    );
+    if (!modeEnabled) {
+      throw new PracticeError(400, `${mode === 'exam' ? 'Exam' : 'Practice'} mode is not enabled for this selection`);
     }
-  } else if (!Boolean(set.practiceModeEnabled) && !isPreview) {
-    throw new PracticeError(400, 'Practice mode is not enabled for this question set');
   }
 
-  const selectedChapters = options.chapters && options.chapters.length > 0 ? options.chapters : Array.isArray(set.chapters) ? set.chapters : [];
-  const chapterIds = selectedChapters.map((chapter) => chapter.id).filter(Boolean);
+  const chapterIds = (options.chapterIds ?? []).filter(Boolean);
+  const setIds = sets.map((set) => set._id);
+  const setOrder = new Map(setIds.map((id, index) => [String(id), index]));
 
   const questionDocs = await PracticeQuestionModel.find({
-    setId,
-    ...(chapterIds.length > 0 ? { chapterId: { $in: chapterIds } } : {}),
-  })
-    .sort({ order: 1 })
-    .lean();
+    setId: { $in: setIds },
+    ...(chapterIds.length > 0 ? { $or: [{ chapterId: { $in: chapterIds } }, { chapterId: '' }] } : {}),
+  }).lean();
 
   if (questionDocs.length === 0) {
     throw new PracticeError(404, 'No questions found for the selected chapters');
   }
 
-  const questions = questionDocs.map((question) => questionSnapshot(question as unknown as QuestionDocLike));
+  const ordered = [...questionDocs].sort(
+    (a, b) =>
+      (setOrder.get(String(a.setId)) ?? 0) - (setOrder.get(String(b.setId)) ?? 0) || Number(a.order ?? 0) - Number(b.order ?? 0)
+  );
+  const questions = ordered.map((question, index) => ({
+    ...questionSnapshot({ ...(question as unknown as QuestionDocLike), order: index + 1 }),
+  }));
   const totalMarks = questions.reduce((sum, question) => sum + question.marks, 0);
 
+  const allChapters = new Map<string, ChapterRef>();
+  sets.forEach((set) => {
+    (Array.isArray(set.chapters) ? (set.chapters as ChapterRef[]) : []).forEach((chapter) => {
+      if (!allChapters.has(chapter.id)) allChapters.set(chapter.id, chapter);
+    });
+  });
+  const attemptChapters = chapterIds.length > 0
+    ? chapterIds.map((id) => allChapters.get(id) ?? { id, title: '', order: 0 })
+    : Array.from(allChapters.values());
+
+  const durationMinutes = mode === 'exam' && primary.examDurationMinutes ? Number(primary.examDurationMinutes) : null;
+
   const attempt = await PracticeAttemptModel.create({
-    userId: options.preview ? String(options.previewUserId ?? (set.createdBy as string) ?? '') : await resolveAttemptUserId(setId),
-    setId,
-    title: String(set.title ?? ''),
+    userId: options.userId,
+    setId: primary._id,
+    title: sets.length === 1 ? String(primary.title ?? '') : `${String(primary.bookTitle ?? '')} (${sets.length} sets)`,
     mode,
     status: 'in_progress',
-    bookId: set.bookId,
-    bookTitle: String(set.bookTitle ?? ''),
-    subject: String(set.subject ?? ''),
-    chapters: Array.isArray(set.chapters) ? set.chapters : [],
-    questionType: set.questionType,
+    bookId: primary.bookId,
+    bookTitle: String(primary.bookTitle ?? ''),
+    subject: String(primary.subject ?? ''),
+    chapters: attemptChapters,
+    questionType: primary.questionType,
     questions: questions.map((question) => ({
       questionId: question.questionId,
       questionType: question.questionType,
       order: question.order,
-      chapterId: '',
-      chapterTitle: '',
+      chapterId: question.chapterId ?? '',
+      chapterTitle: question.chapterTitle ?? '',
       marks: question.marks,
       payload: question.payload,
       answer: question.answer,
@@ -257,27 +293,16 @@ export async function startPracticeAttempt(
     answers: [],
     totalQuestions: questions.length,
     totalMarks,
-    negativeMarking: Number(set.negativeMarking ?? 0),
-    durationMinutes: set.examDurationMinutes ? Number(set.examDurationMinutes) : null,
-    expiresAt:
-      mode === 'exam' && set.examDurationMinutes ? new Date(Date.now() + Number(set.examDurationMinutes) * 60 * 1000) : null,
+    negativeMarking: Number(primary.negativeMarking ?? 0),
+    allowUnanswered: Boolean(primary.allowUnanswered),
+    durationMinutes,
+    expiresAt: durationMinutes ? new Date(Date.now() + durationMinutes * 60 * 1000) : null,
     autoSubmitted: false,
     preview: isPreview,
   });
 
   const doc = attempt.toObject();
   return toPublicAttempt(doc);
-}
-
-async function resolveAttemptUserId(setId: string): Promise<string> {
-  const set = await PracticeQuestionSetModel.findById(setId).lean();
-  const createdBy = String((set as Record<string, unknown> | null)?.createdBy ?? '');
-  if (!createdBy) return new mongoose.Types.ObjectId().toString();
-  try {
-    return new mongoose.Types.ObjectId(createdBy).toString();
-  } catch {
-    return createdBy;
-  }
 }
 
 const practiceService = {
@@ -360,22 +385,71 @@ const practiceService = {
     };
   },
 
-  startAttempt: (userId: string, setId: string, mode: 'practice' | 'exam', options: { chapters?: ChapterRef[]; preview?: boolean } = {}) =>
-    (async () => {
-      const set = await PracticeQuestionSetModel.findById(setId).lean();
-      if (!set || set.publicationState !== 'published') {
-        throw new PracticeError(404, 'Question set not found');
-      }
-      return startPracticeAttempt(set as Record<string, unknown>, setId, mode, options);
-    })(),
+  /**
+   * Starts an attempt for a student's selection. The server resolves which
+   * published sets match (book, question type, chapters, mode) so the client
+   * can never pick unpublished or foreign sets.
+   */
+  async startAttempt(
+    userId: string,
+    input: { bookId: string; questionType: string; mode: 'practice' | 'exam'; chapterIds?: string[] }
+  ) {
+    const chapterIds = (input.chapterIds ?? []).filter(Boolean);
+    const query: Record<string, unknown> = {
+      publicationState: 'published',
+      bookId: input.bookId,
+      questionType: input.questionType,
+    };
+    if (input.mode === 'exam') query.examModeEnabled = true;
+    else query.practiceModeEnabled = true;
+    if (chapterIds.length > 0) query['chapters.id'] = { $in: chapterIds };
 
-  previewSet: async (setId: string) => {
+    const sets = await PracticeQuestionSetModel.find(query).sort({ createdAt: 1 }).lean();
+    if (sets.length === 0) {
+      throw new PracticeError(404, 'No published question sets match this selection');
+    }
+    return startPracticeAttempt(sets as unknown as Array<Record<string, unknown>>, input.mode, { userId, chapterIds });
+  },
+
+  /**
+   * Practice mode only: saves one answer and returns its evaluation so the
+   * student gets instant feedback. Exam attempts never reveal answers early.
+   */
+  async checkAnswer(userId: string, attemptId: string, questionId: string, value: unknown) {
+    const attempt = await loadAttempt(userId, attemptId);
+    if (attempt.status !== 'in_progress') {
+      throw new PracticeError(409, 'This practice session has already been submitted');
+    }
+    if (attempt.mode !== 'practice') {
+      throw new PracticeError(400, 'Instant checking is only available in practice mode');
+    }
+    const questions = (Array.isArray(attempt.questions) ? attempt.questions : []) as QuestionSnapshot[];
+    const question = questions.find((item) => String(item.questionId) === questionId);
+    if (!question) {
+      throw new PracticeError(404, 'Question not found in this attempt');
+    }
+
+    const current = (Array.isArray(attempt.answers) ? attempt.answers : []) as AttemptAnswerEntry[];
+    const merged = [
+      ...current.filter((entry) => String(entry.questionId) !== questionId),
+      { questionId, value },
+    ];
+    await practiceService.saveAnswers(userId, attemptId, merged);
+
+    const result = evaluateQuestion(question, value, Number(attempt.negativeMarking ?? 0));
+    return { result };
+  },
+
+  async previewSet(setId: string, adminUserId: string) {
     const set = await PracticeQuestionSetModel.findById(setId).lean();
     if (!set) {
       throw new PracticeError(404, 'Question set not found');
     }
-    const attempt = await startPracticeAttempt(set as Record<string, unknown>, setId, 'practice', { preview: true });
-    return { attempt, set: attempt };
+    const attempt = await startPracticeAttempt([set as unknown as Record<string, unknown>], 'practice', {
+      userId: adminUserId,
+      preview: true,
+    });
+    return { attempt };
   },
 
   async getAttempt(userId: string, attemptId: string) {
@@ -452,6 +526,15 @@ const practiceService = {
       if (unanswered.length > 0) {
         throw new PracticeError(400, `You have ${unanswered.length} unanswered question(s). Please answer all before submitting.`);
       }
+    }
+
+    if (answers.length > 0 && !finalAutoSubmitted && resolved.status === 'in_progress') {
+      // Persist the submitted answers first so grading uses exactly what the student sent.
+      await PracticeAttemptModel.updateOne(
+        { _id: attemptId, userId, status: 'in_progress' },
+        { $set: { answers: entries } }
+      );
+      resolved.answers = entries as unknown as typeof resolved.answers;
     }
 
     const submitted = await applyEvaluation(resolved, { autoSubmitted: finalAutoSubmitted });

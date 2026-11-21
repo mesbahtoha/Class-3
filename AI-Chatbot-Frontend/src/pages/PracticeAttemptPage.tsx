@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Modal } from '@/components/ui/Modal';
-import { getErrorMessage, getPracticeAttempt, savePracticeAnswers, submitPracticeAnswers } from '@/lib/api';
+import { checkPracticeAnswer, getErrorMessage, getPracticeAttempt, savePracticeAnswers, submitPracticeAnswers } from '@/lib/api';
 import { SkeletonBox } from '@/components/ui/Skeleton';
 import type { AttemptQuestion, PracticeAttempt, QuestionResult, StudentQuestionPayload } from '@/types';
 
@@ -14,7 +14,7 @@ function payloadText(payload: StudentQuestionPayload): string {
   if (typeof p.question === 'string') return p.question;
   if (typeof p.statement === 'string') return p.statement;
   if (typeof p.source === 'string') return p.source;
-  if (typeof p.text === 'string') return p.text;
+  if (typeof p.text === 'string') return p.text.replace(/\{\{\d+\}\}/g, '____');
   return '';
 }
 
@@ -22,10 +22,6 @@ function payloadOptions(payload: StudentQuestionPayload): string[] {
   const p = payload as unknown as Record<string, unknown>;
   if (Array.isArray(p.options)) return p.options.map((option) => String(option));
   return [];
-}
-
-function correctOptionInRange(options: string[], correctIndex: number): boolean {
-  return correctIndex >= 0 && correctIndex < options.length;
 }
 
 function splitFillBlanks(text: string): string[] {
@@ -53,6 +49,8 @@ export function PracticeAttemptPage() {
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [checkResults, setCheckResults] = useState<Record<string, QuestionResult>>({});
+  const [checkingId, setCheckingId] = useState<string | null>(null);
 
   const answersRef = useRef<Record<string, unknown>>({});
   answersRef.current = answers;
@@ -119,6 +117,25 @@ export function PracticeAttemptPage() {
 
   const setAnswer = (questionId: string, value: unknown) => {
     setAnswers((current) => ({ ...current, [questionId]: value }));
+    setCheckResults((current) => {
+      if (!(questionId in current)) return current;
+      const next = { ...current };
+      delete next[questionId];
+      return next;
+    });
+  };
+
+  const checkQuestion = async (questionId: string) => {
+    if (!attemptId) return;
+    setCheckingId(questionId);
+    try {
+      const response = await checkPracticeAnswer(attemptId, questionId, answersRef.current[questionId] ?? null);
+      setCheckResults((current) => ({ ...current, [questionId]: response.result }));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setCheckingId(null);
+    }
   };
 
   // Auto-save drafts (exam) - skip the initial hydration write.
@@ -138,26 +155,26 @@ export function PracticeAttemptPage() {
   const questions = useMemo(() => attempt?.questions ?? [], [attempt]);
   const isExam = attempt?.mode === 'exam';
 
-  const mm = useMemo(() => {
-    if (!attempt?.expiresAt) return null;
-    const expires = new Date(attempt.expiresAt).getTime();
-    const remaining = Math.max(0, Math.floor((expires - Date.now()) / 1000));
-    return formatClock(remaining);
-  }, [attempt?.expiresAt, attempt?.status, attempt]);
-
-  const mmSeconds = useMemo(() => {
-    if (!attempt?.expiresAt) return null;
-    const expires = new Date(attempt.expiresAt).getTime();
-    return Math.max(0, Math.floor((expires - Date.now()) / 1000));
-  }, [attempt?.expiresAt, attempt?.status, attempt]);
-
-  // Auto-submit when the exam timer expires.
+  // Countdown ticks once a second while an exam is running.
+  const [now, setNow] = useState(() => Date.now());
+  const expiresAtMs = attempt?.expiresAt && attempt.status === 'in_progress' ? new Date(attempt.expiresAt).getTime() : null;
   useEffect(() => {
-    if (!isExam || !attempt || attempt.status === 'submitted' || !mmSeconds) return;
-    if (mmSeconds <= 0) {
+    if (expiresAtMs === null) return;
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [expiresAtMs]);
+  const remainingSeconds = expiresAtMs === null ? null : Math.max(0, Math.floor((expiresAtMs - now) / 1000));
+
+  // Auto-submit when the exam timer expires. The server re-checks the deadline.
+  const autoSubmitRef = useRef(false);
+  useEffect(() => {
+    if (!isExam || !attempt || attempt.status === 'submitted' || remainingSeconds === null) return;
+    if (remainingSeconds <= 0 && !autoSubmitRef.current) {
+      autoSubmitRef.current = true;
       void submit();
     }
-  }, [isExam, attempt, mmSeconds, submit]);
+  }, [isExam, attempt, remainingSeconds, submit]);
 
   if (loading) {
     return (
@@ -211,8 +228,6 @@ export function PracticeAttemptPage() {
     return !answer || isEmptyValue(answer.value);
   }).length;
 
-  const mmDisplay = mm;
-
   if (attempt.status === 'submitted') {
     return <AttemptResults attempt={attempt} answers={answers} questions={questions} onRetake={() => navigate('/practice')} />;
   }
@@ -228,8 +243,8 @@ export function PracticeAttemptPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            {mmDisplay && (
-              <Badge variant={mmSeconds !== null && mmSeconds <= 60 ? 'danger' : 'warning'}>⏱ {mmDisplay} left</Badge>
+            {remainingSeconds !== null && (
+              <Badge variant={remainingSeconds <= 60 ? 'danger' : 'warning'}>⏱ {formatClock(remainingSeconds)} left</Badge>
             )}
             <Badge variant="info">{answeredQuestions}/{questions.length} answered</Badge>
           </div>
@@ -249,6 +264,9 @@ export function PracticeAttemptPage() {
                 value={attempt.answers.find((entry) => String(entry.questionId) === question.questionId)?.value}
                 onChange={(value) => setAnswer(question.questionId, value)}
                 showFeedback={attempt.mode === 'practice'}
+                checkResult={checkResults[question.questionId]}
+                checking={checkingId === question.questionId}
+                onCheck={() => void checkQuestion(question.questionId)}
               />
             ))}
           </div>
@@ -263,9 +281,13 @@ export function PracticeAttemptPage() {
                     key={question.questionId}
                     type="button"
                     className="pg-btn-secondary"
-                    style={{ justifyContent: 'flex-start', opacity: answered ? 1 : 0.65 }}
+                    style={{ justifyContent: 'flex-start', opacity: answered ? 1 : 0.75 }}
+                    aria-label={`Question ${index + 1}, ${answered ? 'answered' : 'not answered'}`}
                     onClick={() => document.getElementById(`attempt-q-${question.questionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                   >
+                    <span aria-hidden="true" style={{ fontWeight: 800, color: answered ? 'var(--success-text)' : 'var(--text-muted)' }}>
+                      {answered ? '✔' : '○'}
+                    </span>{' '}
                     {index + 1}. {payloadText(question.payload).slice(0, 40)}
                   </button>
                 );
@@ -312,11 +334,14 @@ interface AttemptQuestionCardProps {
   index: number;
   value: unknown;
   onChange: (value: unknown) => void;
-  /** In practice mode, MCQ answers show immediate Correct/Incorrect feedback when clicked. */
+  /** Practice mode shows a "Check" button and the server's feedback. */
   showFeedback?: boolean;
+  checkResult?: QuestionResult;
+  checking?: boolean;
+  onCheck?: () => void;
 }
 
-function AttemptQuestionCard({ question, index, value, onChange, showFeedback = false }: AttemptQuestionCardProps) {
+function AttemptQuestionCard({ question, index, value, onChange, showFeedback = false, checkResult, checking = false, onCheck }: AttemptQuestionCardProps) {
   const id = `attempt-q-${question.questionId}`;
   const current = (value ?? {}) as Record<string, unknown>;
 
@@ -326,44 +351,24 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
     case 'mcq': {
       const options = payloadOptions(question.payload);
       const selectedIndex = typeof current.optionIndex === 'number' ? current.optionIndex : null;
-      const answerPayload = (question.answer ?? {}) as Record<string, unknown>;
-      const correctIndex = typeof answerPayload.correctIndex === 'number' ? answerPayload.correctIndex : null;
-      const mcqFeedback = showFeedback && selectedIndex !== null;
-      const mcqCorrect = correctIndex !== null && selectedIndex === correctIndex;
-      const correctOption = correctIndex !== null && correctOptionInRange(options, correctIndex) ? options[correctIndex] : null;
       content = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {options.map((option, optionIndex) => {
-            const isCorrectOption = mcqFeedback && correctIndex === optionIndex;
-            return (
-              <button
-                key={option}
-                type="button"
-                className="pg-btn-secondary"
-                style={{
-                  justifyContent: 'flex-start',
-                  borderColor: selectedIndex === optionIndex ? 'var(--accent-candy)' : isCorrectOption ? 'var(--success-text)' : undefined,
-                  background: selectedIndex === optionIndex ? 'var(--surface-mint-soft)' : isCorrectOption ? 'var(--surface-warn)' : undefined,
-                }}
-                onClick={() => onChange({ optionIndex })}
-              >
-                {mcqCorrect && correctIndex === optionIndex ? '✔ ' : ''}
-                {option}
-              </button>
-            );
-          })}
-          {mcqFeedback && (
-            <div
+          {options.map((option, optionIndex) => (
+            <button
+              key={option}
+              type="button"
+              className="pg-btn-secondary"
+              aria-pressed={selectedIndex === optionIndex}
               style={{
-                marginTop: 4,
-                fontWeight: 800,
-                fontSize: 13,
-                color: mcqCorrect ? 'var(--success-text)' : 'var(--danger-text)',
+                justifyContent: 'flex-start',
+                borderColor: selectedIndex === optionIndex ? 'var(--accent-candy)' : undefined,
+                background: selectedIndex === optionIndex ? 'var(--surface-mint-soft)' : undefined,
               }}
+              onClick={() => onChange({ optionIndex })}
             >
-              {mcqCorrect ? '✔ Correct! Great choice.' : `✖ Incorrect. Correct answer: ${correctOption ?? 'N/A'}`}
-            </div>
-          )}
+              {option}
+            </button>
+          ))}
         </div>
       );
       break;
@@ -540,6 +545,48 @@ function AttemptQuestionCard({ question, index, value, onChange, showFeedback = 
       </div>
       <div style={{ fontWeight: 700, marginBottom: 12 }}>{payloadText(question.payload)}</div>
       {content}
+      {showFeedback && onCheck && (
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div>
+            <Button variant="secondary" onClick={onCheck} loading={checking}>Check my answer</Button>
+          </div>
+          {checkResult && <PracticeFeedback result={checkResult} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PracticeFeedback({ result }: { result: QuestionResult }) {
+  if (!result.answered) {
+    return <p style={{ margin: 0, fontWeight: 700, color: 'var(--warning-text)' }}>Please answer this question first.</p>;
+  }
+  const correctText = Array.isArray(result.correctAnswer) ? result.correctAnswer.join(' · ') : String(result.correctAnswer ?? '');
+  return (
+    <div role="status" style={{ padding: 12, borderRadius: 12, border: '1px solid var(--border-color)', background: 'var(--surface-subtle)' }}>
+      {result.correct ? (
+        <p style={{ margin: 0, fontWeight: 800, color: 'var(--success-text)' }}>
+          ✔ Correct! +{result.marksAwarded} of {result.marks} mark(s)
+        </p>
+      ) : (
+        <>
+          <p style={{ margin: 0, fontWeight: 800, color: 'var(--danger-text)' }}>
+            ✖ Not quite. +{result.marksAwarded} of {result.marks} mark(s)
+          </p>
+          <p style={{ margin: '6px 0 0' }}>
+            <strong>Correct answer:</strong> {correctText}
+          </p>
+        </>
+      )}
+      {result.breakdown.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {result.breakdown.map((item, itemIndex) => (
+            <span key={itemIndex} style={{ fontSize: 13, color: item.correctFlag ? 'var(--success-text)' : 'var(--danger-text)' }}>
+              {item.label}: {item.correctFlag ? '✔' : '✖'} {item.correctFlag ? item.student : `“${item.student}” → ${item.correct}`}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import { BookModel } from '../../database/models/Book.model';
 import { PracticeQuestionModel } from '../../database/models/PracticeQuestion.model';
@@ -15,9 +16,12 @@ import { PracticeError } from './types';
 /* Question input schema (admin authoring)                           */
 /* ------------------------------------------------------------------ */
 
+const chapterIdField = z.string().max(64).optional();
+
 export const questionInputSchema = z.discriminatedUnion('questionType', [
   z.object({
     questionType: z.literal('mcq'),
+    chapterId: chapterIdField,
     question: z.string().min(1).max(2000),
     options: z.array(z.string().min(1).max(300)).min(2).max(6),
     correctIndex: z.number().int().min(0).max(5),
@@ -25,6 +29,7 @@ export const questionInputSchema = z.discriminatedUnion('questionType', [
   }),
   z.object({
     questionType: z.literal('fill_blank'),
+    chapterId: chapterIdField,
     text: z.string().min(1).max(3000),
     blanks: z
       .array(
@@ -39,12 +44,14 @@ export const questionInputSchema = z.discriminatedUnion('questionType', [
   }),
   z.object({
     questionType: z.literal('true_false'),
+    chapterId: chapterIdField,
     statement: z.string().min(1).max(2000),
     correct: z.boolean(),
     marks: z.number().min(0).max(100).optional(),
   }),
   z.object({
     questionType: z.literal('matching'),
+    chapterId: chapterIdField,
     left: z.array(z.string().min(1).max(200)).min(2).max(8),
     right: z.array(z.string().min(1).max(200)).min(2).max(8),
     pairs: z.array(z.object({ left: z.string(), right: z.string() })).min(1).max(8),
@@ -52,6 +59,7 @@ export const questionInputSchema = z.discriminatedUnion('questionType', [
   }),
   z.object({
     questionType: z.literal('one_word'),
+    chapterId: chapterIdField,
     question: z.string().min(1).max(2000),
     answer: z.string().min(1).max(300),
     alternatives: z.array(z.string().min(1).max(300)).max(8).optional(),
@@ -59,11 +67,13 @@ export const questionInputSchema = z.discriminatedUnion('questionType', [
   }),
   z.object({
     questionType: z.literal('rearrange'),
+    chapterId: chapterIdField,
     items: z.array(z.string().min(1).max(300)).min(2).max(10),
     marks: z.number().min(0).max(100).optional(),
   }),
   z.object({
     questionType: z.literal('translation'),
+    chapterId: chapterIdField,
     source: z.string().min(1).max(1000),
     sourceLanguage: z.string().max(50).optional(),
     targetLanguage: z.string().min(1).max(50),
@@ -256,11 +266,33 @@ interface QuestionTotals {
 
 async function questionTotals(setId: string): Promise<QuestionTotals> {
   const rows = await PracticeQuestionModel.aggregate<{ _id: unknown; total: number; marks: number }>([
-    { $match: { setId } },
+    { $match: { setId: new mongoose.Types.ObjectId(setId) } },
     { $group: { _id: '$setId', total: { $sum: 1 }, marks: { $sum: '$marks' } } },
   ]);
   const row = rows[0];
   return { totalQuestions: Number(row?.total ?? 0), totalMarks: Number(row?.marks ?? 0) };
+}
+
+/**
+ * Resolves the chapter a question belongs to. The chapter must be one of the
+ * set's chapters. A single-chapter set assigns its only chapter by default.
+ */
+function resolveQuestionChapter(
+  setChapters: Array<{ id: string; title: string }>,
+  requestedId: string | undefined
+): { chapterId: string; chapterTitle: string } {
+  const id = (requestedId ?? '').trim();
+  if (id) {
+    const match = setChapters.find((chapter) => chapter.id === id);
+    if (!match) {
+      throw new PracticeError(400, 'The question chapter must be one of the chapters selected for this set');
+    }
+    return { chapterId: match.id, chapterTitle: match.title };
+  }
+  if (setChapters.length === 1) {
+    return { chapterId: setChapters[0].id, chapterTitle: setChapters[0].title };
+  }
+  return { chapterId: '', chapterTitle: '' };
 }
 
 function toQuestionForm(question: Record<string, unknown>): Record<string, unknown> {
@@ -404,7 +436,7 @@ export const adminService = {
     return { sets: mapped, total, page, limit };
   },
 
-  async createSet(input: CreateQuestionSetInput) {
+  async createSet(input: CreateQuestionSetInput, adminUserId: string) {
     const book = await BookModel.findById(input.bookId).lean();
     if (!book) {
       throw new PracticeError(404, 'Book not found');
@@ -414,6 +446,9 @@ export const adminService = {
     const resolvedChapters = input.chapters
       .map((chapterId) => chapters.find((chapter) => chapter.id === chapterId))
       .filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter));
+    if (resolvedChapters.length === 0) {
+      throw new PracticeError(400, 'Select at least one chapter that belongs to this book');
+    }
 
     const now = new Date();
     const set = await PracticeQuestionSetModel.create({
@@ -434,7 +469,7 @@ export const adminService = {
       negativeMarking: input.negativeMarking ?? 0,
       allowUnanswered: input.allowUnanswered ?? false,
       publicationState: input.publicationState ?? 'draft',
-      createdBy: '',
+      createdBy: adminUserId,
       publishedAt: input.publicationState === 'published' ? now : null,
     });
 
@@ -447,7 +482,10 @@ export const adminService = {
     if (!set) {
       throw new PracticeError(404, 'Question set not found');
     }
-    const attempt = await startPracticeAttempt(set as Record<string, unknown>, setId, 'practice', { preview: true, previewUserId: adminUserId });
+    const attempt = await startPracticeAttempt([set as unknown as Record<string, unknown>], 'practice', {
+      userId: adminUserId,
+      preview: true,
+    });
     return { attempt };
   },
 
@@ -482,13 +520,27 @@ export const adminService = {
       if (input[field] !== undefined) update[field] = input[field];
     }
     if (input.bookId) {
+      if (input.chapters === undefined) {
+        throw new PracticeError(400, 'Select the chapters of the new book');
+      }
       const book = await BookModel.findById(input.bookId).lean();
       if (!book) {
         throw new PracticeError(404, 'Book not found');
       }
-      const chapters = await listChaptersForBook(input.bookId);
       update.bookId = input.bookId;
-      update.chapters = chapters.map((chapter) => ({ id: chapter.id, title: chapter.title, order: chapter.order }));
+      update.bookTitle = String(book.title ?? '');
+      update.subject = String(book.subject ?? '');
+    }
+    if (input.chapters !== undefined) {
+      const bookId = String(input.bookId ?? set.bookId);
+      const chapters = await listChaptersForBook(bookId);
+      const resolved = input.chapters
+        .map((chapterId) => chapters.find((chapter) => chapter.id === chapterId))
+        .filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter));
+      if (resolved.length === 0) {
+        throw new PracticeError(400, 'Select at least one chapter that belongs to this book');
+      }
+      update.chapters = resolved.map((chapter) => ({ id: chapter.id, title: chapter.title, order: chapter.order }));
     }
 
     const updated = await PracticeQuestionSetModel.findByIdAndUpdate(setId, { $set: update }, { new: true }).lean();
@@ -555,11 +607,15 @@ export const adminService = {
     }
 
     const normalized = normalizeQuestionInput(input);
+    const chapter = resolveQuestionChapter(
+      (set.chapters ?? []) as Array<{ id: string; title: string }>,
+      input.chapterId
+    );
     const question = await PracticeQuestionModel.create({
       setId,
       bookId: set.bookId,
-      chapterId: '',
-      chapterTitle: '',
+      chapterId: chapter.chapterId,
+      chapterTitle: chapter.chapterTitle,
       questionType: input.questionType,
       order: (await PracticeQuestionModel.countDocuments({ setId })) + 1,
       marks: normalized.marks,
@@ -584,12 +640,22 @@ export const adminService = {
       throw new PracticeError(404, 'Question not found in this set');
     }
 
+    const set = await PracticeQuestionSetModel.findById(setId).lean();
+    if (!set) {
+      throw new PracticeError(404, 'Question set not found');
+    }
     const normalized = normalizeQuestionInput(input);
+    const chapter = resolveQuestionChapter(
+      (set.chapters ?? []) as Array<{ id: string; title: string }>,
+      input.chapterId
+    );
     const updated = await PracticeQuestionModel.findByIdAndUpdate(
       questionId,
       {
         $set: {
           questionType: input.questionType,
+          chapterId: chapter.chapterId,
+          chapterTitle: chapter.chapterTitle,
           order: Number(question.order ?? 0),
           marks: normalized.marks,
           payload: normalized.payload,

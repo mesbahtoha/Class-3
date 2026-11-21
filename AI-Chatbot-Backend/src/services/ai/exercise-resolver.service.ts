@@ -48,9 +48,7 @@ const MATCH_REQUESTS_BN = `দারুণ! চলো Unit 3 Lesson 5 Page 45 Ac
 মানে: হ্যাঁ, অবশ্যই। লাইব্রেরিতে দেখা হবে।
 
 মনে রাখো:
-Call চাইলে call এর উত্তর। Repeat চাইলে again এর উত্তর। Newspaper চাইলে reading এর উত্তর। Pen চাইলে one pen এর উত্তর। Meet চাইলে library এর উত্তর।
-
-তুমি চাইলে এই খেলাটা এখানে খেলতে পারো: Practice পাতায় Match the Requests খেলাটি আছে।`;
+Call চাইলে call এর উত্তর। Repeat চাইলে again এর উত্তর। Newspaper চাইলে reading এর উত্তর। Pen চাইলে one pen এর উত্তর। Meet চাইলে library এর উত্তর।`;
 
 const MATCH_REQUESTS_EN = `Great! Let us solve Unit 3 Lesson 5 Page 45 Activity C together.
 
@@ -74,9 +72,7 @@ Answer: Sorry. I have only one pen.
 Answer: Yes, please. I will see you at the library.
 
 Tip to remember:
-Call goes with call. Repeat goes with again. Newspaper goes with reading. Pen goes with one pen. Meet goes with library.
-
-You can also play this as a game on the Practice page under Match the Requests.`;
+Call goes with call. Repeat goes with again. Newspaper goes with reading. Pen goes with one pen. Meet goes with library.`;
 
 export function resolveKnownExercise(question: string): KnownExerciseResult | null {
   const q = norm(question);

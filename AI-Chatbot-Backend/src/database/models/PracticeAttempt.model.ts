@@ -100,6 +100,7 @@ const practiceAttemptSchema = new Schema(
     incorrectCount: { type: Number, default: 0 },
     unansweredCount: { type: Number, default: 0 },
     negativeMarking: { type: Number, default: 0 },
+    allowUnanswered: { type: Boolean, default: false },
     durationMinutes: { type: Number, default: null },
     expiresAt: { type: Date, default: null },
     autoSubmitted: { type: Boolean, default: false },

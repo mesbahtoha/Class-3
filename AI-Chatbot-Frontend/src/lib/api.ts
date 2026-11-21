@@ -175,8 +175,21 @@ export async function getPracticeSet(id: string): Promise<{ set: PracticeQuestio
   return apiGet<{ set: PracticeQuestionSetSummary }>(`/api/v1/practice/sets/${id}`);
 }
 
-export async function startPracticeAttempt(body: { setId: string; mode: 'practice' | 'exam'; chapters?: string[] }) {
+export async function startPracticeAttempt(body: {
+  bookId: string;
+  questionType: string;
+  mode: 'practice' | 'exam';
+  chapters?: string[];
+}) {
   const { data } = await api.post<{ success: boolean; attempt: import('@/types').PracticeAttempt; created?: boolean }>('/api/v1/practice/attempts', body);
+  return data;
+}
+
+export async function checkPracticeAnswer(id: string, questionId: string, value: unknown) {
+  const { data } = await api.post<{ success: boolean; result: import('@/types').QuestionResult }>(
+    `/api/v1/practice/attempts/${id}/check`,
+    { questionId, value }
+  );
   return data;
 }
 

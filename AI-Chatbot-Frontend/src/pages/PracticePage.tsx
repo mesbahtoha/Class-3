@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonBox } from '@/components/ui/Skeleton';
-import { getErrorMessage, listPracticeBooks, listPracticeChapters, listPracticeSets, startPracticeAttempt } from '@/lib/api';
-import type { PracticeBookSummary, PracticeChapterSummary, PracticeQuestionSetSummary, PracticeQuestionType, PracticeMode } from '@/types';
+import { getErrorMessage, listPracticeBooks, listPracticeChapters, startPracticeAttempt } from '@/lib/api';
+import type { PracticeBookSummary, PracticeChapterSummary, PracticeQuestionType, PracticeMode } from '@/types';
 
 const QUESTION_TYPES: Array<{ value: PracticeQuestionType; label: string; description: string }> = [
   { value: 'mcq', label: 'Multiple Choice', description: 'Pick the correct answer from the options.' },
@@ -94,23 +94,20 @@ export function PracticePage() {
     setSelectedChapterIds((current) => (current.includes(id) ? current.filter((value) => value !== id) : [...current, id]));
   };
 
-  const chapterOptions = chapters ?? [];
-  const selectedChapters = allSelected ? chapterOptions.map((chapter) => chapter.id) : selectedChapterIds;
-
   const start = async () => {
     if (!bookId || !questionType || !mode) return;
+    if (!allSelected && selectedChapterIds.length === 0) {
+      toast.error('Please choose at least one chapter.');
+      return;
+    }
     setStarting(true);
     try {
-      const params: { bookId?: string; chapterIds?: string[]; questionType?: string; mode: string } = { mode, questionType };
-      if (bookId) params.bookId = bookId;
-      if (selectedChapters.length > 0) params.chapterIds = selectedChapters;
-      const { sets } = await listPracticeSets(params);
-      const set: PracticeQuestionSetSummary | undefined = sets[0];
-      if (!set) {
-        toast.error('No published questions found for this selection. Please try another combination.');
-        return;
-      }
-      const { attempt } = await startPracticeAttempt({ setId: set._id, mode, chapters: selectedChapters });
+      const { attempt } = await startPracticeAttempt({
+        bookId,
+        questionType,
+        mode,
+        chapters: allSelected ? undefined : selectedChapterIds,
+      });
       navigate(`/practice/attempt/${attempt._id}`);
     } catch (error) {
       toast.error(getErrorMessage(error));

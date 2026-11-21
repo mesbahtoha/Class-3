@@ -17,7 +17,7 @@ export const adminPracticeController = {
 
   createSet: asyncHandler(async (req, res) => {
     const input = req.body as CreateQuestionSetInput;
-    const result = await adminService.createSet(input);
+    const result = await adminService.createSet(input, req.user!.id);
     return ok(res, result, 201);
   }),
 

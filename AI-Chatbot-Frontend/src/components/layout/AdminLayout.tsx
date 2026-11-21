@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: MdDashboard, end: true },
   { to: '/admin/users', label: 'Users', icon: MdPeople },
   { to: '/admin/books', label: 'Books (Class 3)', icon: MdStickyNote2 },
-  { to: '/admin/practice', label: 'Practice & Exams', icon: MdSchool },
+  { to: '/admin/practice', label: 'Practice & Exam Management', icon: MdSchool },
   { to: '/admin/docs', label: 'Documentation', icon: MdBook },
   { to: '/admin/ai-settings', label: 'AI Providers', icon: MdMemory },
   { to: '/admin/notices', label: 'Notices (legacy)', icon: MdStickyNote2 },

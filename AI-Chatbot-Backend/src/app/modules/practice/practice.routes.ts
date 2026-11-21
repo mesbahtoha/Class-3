@@ -3,7 +3,7 @@ import { authenticate } from '../../../middleware/auth.middleware';
 import { asyncHandler, ok } from '../../../utils/response.utils';
 import practiceController from './practice.controller';
 import { validate } from '../../../middleware/validate.middleware';
-import { startAttemptSchema, attemptAnswersSchema } from './practice.validation';
+import { startAttemptSchema, attemptAnswersSchema, checkAnswerSchema } from './practice.validation';
 
 const router = Router();
 
@@ -80,6 +80,17 @@ router.post(
   asyncHandler(async (req, res) => {
     const { attempt, autoSubmitted } = await practiceController.saveAnswers(req.user!.id, String(req.params.attemptId), req.body);
     return ok(res, { attempt, autoSubmitted });
+  })
+);
+
+router.post(
+  '/attempts/:attemptId/check',
+  authenticate,
+  validate(checkAnswerSchema, 'body'),
+  asyncHandler(async (req, res) => {
+    const { questionId, value } = req.body as { questionId: string; value: unknown };
+    const { result } = await practiceController.checkAnswer(req.user!.id, String(req.params.attemptId), questionId, value);
+    return ok(res, { result });
   })
 );
 

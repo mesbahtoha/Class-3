@@ -109,6 +109,8 @@ export interface QuestionSnapshot {
   questionType: PracticeQuestionType;
   order: number;
   marks: number;
+  chapterId?: string;
+  chapterTitle?: string;
   payload: unknown;
   answer: unknown;
   alternatives?: string[];

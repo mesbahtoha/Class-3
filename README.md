@@ -55,8 +55,8 @@ still present and functional.
   browser Web Speech API.
 - **Chat workspace** - the retained NoticeFlow chat with saved conversations, SSE streaming,
   notice citations, share links, and transcript export.
-- **Practice and play** - offline practice quizzes, a matching game for
-  *English For Today*, Unit 3, Lesson 5, Page 45, Activity C, and a safe lesson-slide player.
+- **Practice and exams** - admin-authored, book- and chapter-wise question sets with seven
+  question types, Practice and Exam modes, automatic scoring, and a safe lesson-slide player.
 - **Bilingual UI** - English / বাংলা interface with light and dark themes.
 
 ### For administrators
@@ -85,7 +85,7 @@ still present and functional.
 
 ```text
 Browser (React + Vite)
- ├─ Public site: landing, tutor, books, practice, lesson player, matching game
+ ├─ Public site: landing, tutor, books, practice, lesson player, practice & exams
  ├─ Chat workspace (auth): SSE streaming, citations, share, export
  └─ Admin console (admin JWT): books, providers, users, notices, logs, analytics
             │
@@ -698,7 +698,6 @@ Default mode mapping:
 | `/books/:bookId` | Book detail with sample chunks |
 | `/learn` and `/learn/:lessonId` | Lesson slide player |
 | `/practice` | Offline practice quizzes |
-| `/exercise/match-requests` | Request/reply matching game |
 | `/about`, `/contact`, `/help`, `/privacy` | Informational pages |
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | Auth (public-only guard) |
 | `/share/:token` | Shared conversation view |
@@ -884,8 +883,8 @@ the MongoDB log transport, which powers the admin **Logs** page in serverless de
 - **In-memory attachments are per process.** On multi-instance serverless deployments an
   upload and the following chat request can land on different instances. Use a single
   instance, or replace the store with a shared short-TTL store.
-- **Practice content is static.** The offline practice page and matching game are fixed
-  exercises; only the tutor quiz endpoint is generated from book context.
+- **Practice content is admin-authored.** Practice and exam sets are created in the admin
+  panel; only the tutor quiz endpoint is generated from book context.
 - **No parent/teacher dashboards, mobile app, or payments.**
 - **UI localization covers interface chrome.** Tutor answer language is decided per request.
 - **Admin-provided provider keys live in settings.** Prefer environment secrets in
