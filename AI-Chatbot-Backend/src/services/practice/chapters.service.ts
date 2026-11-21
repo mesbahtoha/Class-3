@@ -45,7 +45,8 @@ export async function listChaptersForBook(bookId: string): Promise<ChapterRef[]>
   const chapters: ChapterRef[] = rows
     .map((row) => {
       const key = row._id as Record<string, unknown>;
-      const title = String(key.chapterTitle ?? '') || 'General';
+      // Front-matter chunks have no chapter title; they are not study chapters.
+      const title = String(key.chapterTitle ?? '').trim();
       const order = Number(key.chapterOrder ?? 0) || 0;
       const chapterId = key.chapterId ? String(key.chapterId) : stableChapterId(title, order);
       return {
@@ -57,7 +58,7 @@ export async function listChaptersForBook(bookId: string): Promise<ChapterRef[]>
         lastPage: (row.lastPage as number) ?? null,
       };
     })
-    .filter((chapter) => chapter.title.trim().length > 0)
+    .filter((chapter) => chapter.title.length > 0)
     .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title))
     .map(({ id, title, order }) => ({ id, title, order }));
 

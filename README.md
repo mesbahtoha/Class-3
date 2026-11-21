@@ -749,6 +749,7 @@ Default mode mapping:
 | `/admin` | Dashboard |
 | `/admin/users` | User management |
 | `/admin/books` | Textbook upload, processing, publishing |
+| `/admin/practice` | Practice & exam question set management |
 | `/admin/ai-settings` | Provider/model switching and validation |
 | `/admin/notices` | Notice management |
 | `/admin/chats` | Chat history |
@@ -758,6 +759,22 @@ Default mode mapping:
 | `/admin/prompt-templates` | Prompt templates |
 | `/admin/logs` | Log viewer |
 | `/admin/system` | Runtime and database status |
+
+### Admin practice workflow
+
+1. **Create a set**: title, book, a subset of the book's chapters (or all chapters), one of
+   the seven question types, marks per question, and practice/exam modes. Exams require a
+   duration. New sets are always drafts.
+2. **Add questions**: the builder is type-aware (MCQ options with a correct-answer radio,
+   fill-in-the-blank markers, true/false, matching pairs, one-word answers, rearrange order,
+   translation). Every save is validated on the client and again on the server.
+3. **Edit safely**: opening a question restores its stored options, correct answer, accepted
+   alternatives, matching pairs and correct rearrange order. Editing a set preserves its
+   exact chapter subset.
+4. **Manage**: filter by book, chapter, type, status or title; page through results; reorder
+   questions; duplicate a question or a whole set; preview; publish; unpublish; delete.
+5. **Publish rules**: a set needs at least one question with marks, at least one enabled mode,
+   an exam duration when exam mode is on, and a published book with chunks.
 
 Frontend behavior worth knowing:
 
@@ -918,7 +935,9 @@ the MongoDB log transport, which powers the admin **Logs** page in serverless de
 - **Lexical retrieval, not vector embeddings.** Multilingual keyword overlap and Banglish
   variants cover common phrasing, but synonyms outside the variant map may be missed. A
   multilingual embedding model can be added behind the existing adapter interface.
-- **No OCR.** Scanned or image-only PDFs are rejected for ingestion until text is available.
+- **OCR quality depends on the scan.** Scanned pages are rendered and OCR'd during ingestion with
+  a local/vision hybrid and per-page caching. Decorative headings or unusual fonts can still be
+  misread; chapter titles and page numbers should be reviewed after importing a new book.
 - **In-memory attachments are per process.** On multi-instance serverless deployments an
   upload and the following chat request can land on different instances. Use a single
   instance, or replace the store with a shared short-TTL store.
@@ -929,8 +948,8 @@ the MongoDB log transport, which powers the admin **Logs** page in serverless de
 - **Admin-provided provider keys live in settings.** Prefer environment secrets in
   production.
 
-Natural next steps: multilingual embeddings and a vector index, OCR/vision ingestion,
-per-book access controls, classroom/teacher tools, and richer adaptive practice.
+Natural next steps: multilingual embeddings and a vector index, per-book access controls,
+classroom/teacher tools, and richer adaptive practice.
 
 ---
 

@@ -254,6 +254,9 @@ export async function listPracticeAttempts(params?: { mode?: string; limit?: num
 
 export interface AdminPracticeSetRow extends PracticeQuestionSetSummary {
   questionCount: number;
+  publicationState?: 'draft' | 'published' | 'archived';
+  createdBy?: string;
+  createdAt?: string | null;
 }
 
 export async function listAdminPracticeSets(params: Record<string, unknown>) {
@@ -276,6 +279,13 @@ export async function updateAdminPracticeSet(setId: string, body: Record<string,
 
 export async function deleteAdminPracticeSet(setId: string) {
   const { data } = await api.delete<{ success: boolean; deleted: boolean }>(`/api/v1/admin/practice/sets/${setId}`);
+  return data;
+}
+
+export async function duplicateAdminPracticeSet(setId: string) {
+  const { data } = await api.post<{ success: boolean; set: AdminPracticeSetRow; created?: boolean }>(
+    `/api/v1/admin/practice/sets/${setId}/duplicate`
+  );
   return data;
 }
 
@@ -320,6 +330,14 @@ export async function updateAdminPracticeQuestion(setId: string, questionId: str
 export async function deleteAdminPracticeQuestion(setId: string, questionId: string) {
   const { data } = await api.delete<{ success: boolean; deleted: boolean }>(
     `/api/v1/admin/practice/sets/${setId}/questions/${questionId}`
+  );
+  return data;
+}
+
+export async function reorderAdminPracticeQuestions(setId: string, questionIds: string[]) {
+  const { data } = await api.patch<{ success: boolean; reordered: boolean; totalQuestions: number }>(
+    `/api/v1/admin/practice/sets/${setId}/questions/order`,
+    { questionIds }
   );
   return data;
 }

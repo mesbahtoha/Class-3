@@ -66,17 +66,20 @@ export function runBootJobs(): void {
     log.info('Boot jobs completed (indexes + seed)');
   })();
 
-  Promise.race([
-    job,
-    new Promise<void>((resolve) => {
-      setTimeout(() => {
-        log.warn('Boot jobs timed out after 20s (continuing without them)');
-        resolve();
-      }, 20_000);
-    }),
-  ]).catch((error: unknown) => {
-    log.error('Boot jobs failed', { message: error instanceof Error ? error.message : String(error) });
-  });
+  let finished = false;
+  const timer = setTimeout(() => {
+    if (finished) return;
+    log.warn('Boot jobs timed out after 20s (continuing without them)');
+  }, 20_000);
+  timer.unref?.();
+  Promise.race([job, new Promise<void>((resolve) => setTimeout(resolve, 20_000))])
+    .catch((error: unknown) => {
+      log.error('Boot jobs failed', { message: error instanceof Error ? error.message : String(error) });
+    })
+    .finally(() => {
+      finished = true;
+      clearTimeout(timer);
+    });
 }
 
 /** Returns the underlying native MongoDB Db (used for GridFS + raw queries). */

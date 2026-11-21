@@ -37,6 +37,11 @@ export const adminPracticeController = {
     return ok(res, { deleted });
   }),
 
+  duplicateSet: asyncHandler(async (req, res) => {
+    const result = await adminService.duplicateSet(String(req.params.id), req.user!.id);
+    return ok(res, result, 201);
+  }),
+
   publishSet: asyncHandler(async (req, res) => {
     const { set } = await adminService.publishSet(String(req.params.id));
     return ok(res, { set });
@@ -75,6 +80,12 @@ export const adminPracticeController = {
   duplicateQuestion: asyncHandler(async (req, res) => {
     const { question } = await adminService.duplicateQuestion(String(req.params.id), String(req.params.questionId));
     return ok(res, { question });
+  }),
+
+  reorderQuestions: asyncHandler(async (req, res) => {
+    const { questionIds } = req.body as { questionIds: string[] };
+    const result = await adminService.reorderQuestions(String(req.params.id), questionIds);
+    return ok(res, result);
   }),
 };
 

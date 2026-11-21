@@ -85,6 +85,8 @@ async function main(): Promise<void> {
       grade: 'Class 3',
       language: 'en',
       publicationState: 'published',
+      processingState: 'ready',
+      chunkCount: 2,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -236,6 +238,21 @@ async function main(): Promise<void> {
     for (const typeCase of typeCases) {
       const setId = await createSet(typeCase.type);
       await addQuestion(setId, typeCase.question);
+      const formRows = (await call('GET', `/admin/practice/sets/${setId}/questions`, adminToken)).body.questions;
+      const form = formRows?.[0];
+      if (typeCase.type === 'matching') {
+        check(
+          'matching editor round-trips text pairs',
+          Array.isArray(form?.pairs) && form.pairs[0]?.left === 'cat' && form.pairs[0]?.right === 'meow'
+        );
+      }
+      if (typeCase.type === 'rearrange') {
+        check(
+          'rearrange editor round-trips the correct order',
+          Array.isArray(form?.items) && form.items.join(' ') === 'I am happy',
+          JSON.stringify(form?.items)
+        );
+      }
       await publish(setId);
       const started = await call('POST', '/practice/attempts', student.token, { bookId, questionType: typeCase.type, mode: 'practice', chapters: [ch1.id, ch2.id] });
       const question = started.body.attempt?.questions?.find((q: Json) => q.questionType === typeCase.type);
@@ -252,6 +269,26 @@ async function main(): Promise<void> {
     const list = await call('GET', `/admin/practice/sets?bookId=${bookId}&status=published`, adminToken);
     const listed = list.body.sets.find((s: Json) => s._id === mcqSet);
     check('admin lists published sets with the creating admin recorded', Boolean(listed) && listed.createdBy !== '');
+    check('admin list exposes draft/published state', listed?.draft === false && listed?.publicationState === 'published');
+
+    const draftList = await call('GET', `/admin/practice/sets?bookId=${bookId}&status=draft`, adminToken);
+    const listedDraft = draftList.body.sets.find((s: Json) => s._id === draftId);
+    check('admin can filter draft sets', Boolean(listedDraft) && listedDraft.draft === true);
+
+    const duplicate = await call('POST', `/admin/practice/sets/${mcqSet}/duplicate`, adminToken);
+    const duplicateId = duplicate.body?.set?._id as string;
+    const duplicateQuestions = (await call('GET', `/admin/practice/sets/${duplicateId}/questions`, adminToken)).body.questions ?? [];
+    check('admin can duplicate a set with its questions', duplicate.status === 201 && duplicate.body.set.draft === true && duplicateQuestions.length >= 2);
+
+    const currentQuestions = (await call('GET', `/admin/practice/sets/${mcqSet}/questions`, adminToken)).body.questions ?? [];
+    const reversed = [...currentQuestions].reverse().map((q: Json) => String(q._id));
+    const reorder = await call('PATCH', `/admin/practice/sets/${mcqSet}/questions/order`, adminToken, { questionIds: reversed });
+    const reordered = (await call('GET', `/admin/practice/sets/${mcqSet}/questions`, adminToken)).body.questions ?? [];
+    check(
+      'admin can reorder questions',
+      reorder.status === 200 && reordered.map((q: Json) => String(q._id)).join(',') === reversed.join(',')
+    );
+
     const edit = await call('PATCH', `/admin/practice/sets/${mcqSet}`, adminToken, { title: `API test renamed ${runId}`, bookId, chapters: [ch1.id] });
     check('admin can change a set\'s chapters', edit.status === 200 && edit.body.set.chapters.length === 1);
   } finally {
